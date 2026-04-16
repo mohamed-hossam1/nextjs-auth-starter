@@ -24,6 +24,8 @@
   --color-ring: var(--ring);
   --color-good: var(--good);
   --color-bad: var(--bad);
+  --color-title: var(--title);
+  --color-subtitle: var(--subtitle);
   --font-serif-display: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
   --font-serif-body: 'DM Serif Text', 'Iowan Old Style', Georgia, serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -54,6 +56,8 @@
   --ring: #c14a2b;
   --good: #406b3a;
   --bad: #b6422f;
+  --title: var(--foreground);
+  --subtitle: var(--muted-foreground);
   --radius: 0.25rem;
 }
 
@@ -78,6 +82,8 @@
   --ring: #e05a3a;
   --good: #5a9b50;
   --bad: #e05a3a;
+  --title: var(--foreground);
+  --subtitle: var(--muted-foreground);
 }
 
 @layer base {

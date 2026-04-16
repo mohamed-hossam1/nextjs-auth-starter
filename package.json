@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
+    "@hookform/resolvers": "^5.4.0",
     "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-query-devtools": "^5.100.14",
     "better-auth": "^1.6.11",
@@ -23,6 +24,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "next-safe-action": "^8.5.3",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.9",
     "radix-ui": "^1.4.3",
