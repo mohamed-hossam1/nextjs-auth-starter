@@ -4,159 +4,157 @@ import { headers } from "next/headers";
 import { handleAction } from "@/lib/handleErrors/action-handler";
 import { auth } from "@/lib/auth";
 import { AppError } from "@/lib/handleErrors/error";
-import {
-  ForgotPasswordSchema,
-  LoginSchema,
-  RegisterSchema,
-  ResetPasswordSchema,
-} from "@/lib/schema/auth-schema";
 import { zodValidate } from "@/lib/handleErrors/zod-validate";
 import { z } from "zod";
-import { isValidateEmail } from "@/lib/handleErrors/email-validation";
 import { ROUTES } from "@/constants/routes";
 import { isAPIError } from "better-auth/api";
+import {
+  ChangePasswordSchema,
+  UpdateProfileSchema,
+} from "@/lib/schema/profile-schema";
 
-export async function register(formData: z.infer<typeof RegisterSchema>) {
+export async function updateProfile(
+  formData: z.infer<typeof UpdateProfileSchema>,
+) {
   return handleAction(async () => {
-    const validated = zodValidate(RegisterSchema, formData);
-    const emailError = await isValidateEmail(validated.email);
-    if (emailError) {
-      throw new AppError(emailError, 400);
-    }
+    const validated = zodValidate(UpdateProfileSchema, formData);
 
     let response;
     try {
-      response = await auth.api.signUpEmail({
+      response = await auth.api.updateUser({
         headers: await headers(),
         body: {
           name: validated.name,
-          email: validated.email,
-          password: validated.password,
-          callbackURL: ROUTES.ADMIN,
         },
       });
     } catch (error) {
       if (isAPIError(error)) {
         throw new AppError(error.message, error.statusCode);
       }
-      console.error("Signup internal server error:", error);
+      console.error("Update profile internal server error:", error);
       throw new AppError("Something went wrong", 500);
     }
     return response;
   });
 }
 
-export async function login(formData: z.infer<typeof LoginSchema>) {
+export async function hasPassword() {
   return handleAction(async () => {
-    const validated = zodValidate(LoginSchema, formData);
-
     let response;
     try {
-      response = await auth.api.signInEmail({
+      const accounts = await auth.api.listUserAccounts({
         headers: await headers(),
-        body: {
-          email: validated.email,
-          password: validated.password,
-          callbackURL: ROUTES.ADMIN,
-        },
       });
+      response = accounts.some((a) => a.providerId === "credential");
     } catch (error) {
       if (isAPIError(error)) {
         throw new AppError(error.message, error.statusCode);
       }
-      console.error("Login internal server error:", error);
+      console.error("Has password internal server error:", error);
       throw new AppError("Something went wrong", 500);
     }
     return response;
   });
 }
 
-export async function signInWithGoogle(authType: "LOGIN" | "REGISTER") {
+export async function sendPasswordResetEmail(email: string) {
   return handleAction(async () => {
-    void authType;
-
-    let response;
-    try {
-      response = await auth.api.signInSocial({
-        headers: await headers(),
-        body: {
-          provider: "google",
-          callbackURL: ROUTES.ADMIN,
-        },
-      });
-    } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Google sign in internal server error:", error);
-      throw new AppError("Something went wrong", 500);
-    }
-    return response;
-  });
-}
-
-export async function forgotPassword(
-  formData: z.infer<typeof ForgotPasswordSchema>,
-) {
-  return handleAction(async () => {
-    const validated = zodValidate(ForgotPasswordSchema, formData);
-
     let response;
     try {
       response = await auth.api.requestPasswordReset({
         body: {
-          email: validated.email,
-          redirectTo: `${ROUTES.RESETPASSWORD}?type=forgot`,
+          email,
+          redirectTo: `${ROUTES.RESETPASSWORD}?type=reset`,
         },
       });
     } catch (error) {
       if (isAPIError(error)) {
         throw new AppError(error.message, error.statusCode);
       }
-      console.error("Forgot password internal server error:", error);
+      console.error("Send password reset email internal server error:", error);
       throw new AppError("Something went wrong", 500);
     }
     return response;
   });
 }
 
-export async function resetPassword(
-  formData: z.infer<typeof ResetPasswordSchema> & { token: string },
+export async function changePassword(
+  formData: z.infer<typeof ChangePasswordSchema>,
 ) {
   return handleAction(async () => {
-    const validated = zodValidate(ResetPasswordSchema, formData);
+    const validated = zodValidate(ChangePasswordSchema, formData);
 
     let response;
     try {
-      response = await auth.api.resetPassword({
+      response = await auth.api.changePassword({
+        headers: await headers(),
         body: {
-          newPassword: validated.password,
-          token: formData.token,
+          newPassword: validated.newPassword,
+          currentPassword: validated.currentPassword,
         },
       });
     } catch (error) {
       if (isAPIError(error)) {
         throw new AppError(error.message, error.statusCode);
       }
-      console.error("Reset password internal server error:", error);
+      console.error("Change password internal server error:", error);
       throw new AppError("Something went wrong", 500);
     }
     return response;
   });
 }
 
-export async function signOut() {
+export async function getSessions() {
   return handleAction(async () => {
     let response;
     try {
-      response = await auth.api.signOut({
+      response = await auth.api.listSessions({
         headers: await headers(),
       });
     } catch (error) {
       if (isAPIError(error)) {
         throw new AppError(error.message, error.statusCode);
       }
-      console.error("Sign out internal server error:", error);
+      console.error("Get sessions internal server error:", error);
+      throw new AppError("Something went wrong", 500);
+    }
+    return response;
+  });
+}
+
+export async function getCurrentSession() {
+  return handleAction(async () => {
+    let response;
+    try {
+      response = await auth.api.getSession({
+        headers: await headers(),
+      });
+    } catch (error) {
+      if (isAPIError(error)) {
+        throw new AppError(error.message, error.statusCode);
+      }
+      console.error("Get current session internal server error:", error);
+      throw new AppError("Something went wrong", 500);
+    }
+    return response;
+  });
+}
+
+export async function revokeSession(token: string) {
+  return handleAction(async () => {
+    let response;
+    try {
+      response = await auth.api.revokeSession({
+        headers: await headers(),
+        body: {
+          token,
+        },
+      });
+    } catch (error) {
+      if (isAPIError(error)) {
+        throw new AppError(error.message, error.statusCode);
+      }
+      console.error("Revoke session internal server error:", error);
       throw new AppError("Something went wrong", 500);
     }
     return response;
