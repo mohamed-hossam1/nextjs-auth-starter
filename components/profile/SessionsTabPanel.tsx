@@ -16,11 +16,6 @@ export function SessionsTabPanel({
   isOpen,
   isActive,
 }: {
-  /**
-   * Identifier (NOT the token) of the session associated with this browser.
-   * Used purely to highlight the "this device" card. The session token is
-   * never exposed to the client — see `lib/auth-helpers.ts`.
-   */
   currentSessionId: string;
   isOpen: boolean;
   isActive: boolean;

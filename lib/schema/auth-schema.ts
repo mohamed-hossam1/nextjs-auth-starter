@@ -1,10 +1,9 @@
 import { z } from "zod";
 
-
 const PasswordRule = z
   .string()
   .min(6, { message: "Password must be at least 6 characters long." })
-  .max(100, { message: "Password cannot exceed 100 characters." })
+  .max(100, { message: "Password cannot exceed 100 characters." });
 
 const EmailRule = z
   .string()
@@ -14,10 +13,7 @@ const EmailRule = z
 
 export const LoginSchema = z.object({
   email: EmailRule,
-  password: z
-    .string()
-    .min(1, { message: "Password is required." })
-    .max(100, { message: "Password cannot exceed 100 characters." }),
+  password: PasswordRule,
 });
 
 export const RegisterSchema = z.object({

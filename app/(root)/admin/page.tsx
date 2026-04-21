@@ -6,22 +6,10 @@ import { SessionActionsSkeleton } from "@/components/skeletons/SessionActionsSke
 import { ROUTES } from "@/constants/routes";
 import { getSession } from "@/lib/auth-helpers";
 
-/**
- * Server-side authentication guard for the admin route.
- *
- * Why this matters even though we also have `proxy.ts`:
- *  - Defense in depth. The proxy is the first line; this is the last line.
- *  - The proxy uses cookie inspection only (no DB hit) — that catches
- *    "no cookie at all" but not "cookie present but expired/revoked". The
- *    server component re-validates against the actual session store.
- *  - Future server components on this page will read user-scoped data; if
- *    we ever forget to add an auth check there, this redirect prevents the
- *    page from rendering with a missing session in the first place.
- */
 export default async function AdminPage() {
   const session = await getSession();
   if (!session) {
-    redirect(ROUTES.LOGIN);
+    redirect(`${ROUTES.LOGIN}?reauth=1`);
   }
 
   return (

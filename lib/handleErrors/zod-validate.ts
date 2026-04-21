@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ValidationError } from "./error";
 
+import { ValidationError } from "./error";
 
 export function zodValidate<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,

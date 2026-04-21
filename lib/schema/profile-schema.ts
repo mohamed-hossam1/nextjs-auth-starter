@@ -21,15 +21,7 @@ export const ChangeEmailSchema = z.object({
     .transform((value) => value.trim().toLowerCase()),
 });
 
-export const ChangePasswordSchema = z
-  .object({
-    currentPassword: z
-      .string()
-      .min(1, { message: "Current password is required." })
-      .max(100, { message: "Password cannot exceed 100 characters." }),
-    newPassword: PasswordRule,
-  })
-  .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "New password must be different from the current one.",
-    path: ["newPassword"],
-  });
+export const ChangePasswordSchema = z.object({
+  currentPassword: PasswordRule,
+  newPassword: PasswordRule,
+});

@@ -43,9 +43,6 @@ export function ForgotPasswordForm() {
 
     setSubmittedEmail(data.email);
     form.reset({ email: data.email });
-    // SECURITY: do not display any server-supplied message — it could
-    // distinguish "user found" vs "user not found". Always show the same
-    // generic confirmation regardless of whether the email exists.
     toast.success(
       "If the email exists, a password reset link has been sent.",
       { position: "top-center" },

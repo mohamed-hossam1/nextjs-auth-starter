@@ -7,7 +7,6 @@ import type { AuthenticatedContext } from "@/lib/auth-helpers";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import type { ActionResult } from "@/types/global";
 
-
 export type SessionPayload = AuthenticatedContext;
 export type SessionQueryData = ActionResult<SessionPayload | null>;
 

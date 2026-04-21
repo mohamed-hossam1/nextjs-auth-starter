@@ -16,8 +16,6 @@ import type { PublicUser } from "@/lib/auth-helpers";
 import { getErrorMessage } from "@/lib/handleErrors/error";
 import { accountHasPasswordQueryKey } from "@/lib/reactQuery/query-keys";
 
-const PASSWORD_MIN = 8;
-
 export function SecurityTabPanel({
   user,
   isOpen,
@@ -73,9 +71,6 @@ export function SecurityTabPanel({
 
   const sendResetEmailMutation = useMutation({
     mutationFn: async () => {
-      // SECURITY: do NOT pass an email in. The server action derives it from
-      // the authenticated session, so users can't trigger reset emails to
-      // arbitrary inboxes.
       const result = await sendCurrentUserPasswordResetEmail();
       if (!result.success) {
         throw new Error(
@@ -96,15 +91,15 @@ export function SecurityTabPanel({
   function handleChangePassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (currentPassword.length < PASSWORD_MIN) {
-      toast.error(`Current password must be at least ${PASSWORD_MIN} characters.`, {
+    if (currentPassword.length < 6) {
+      toast.error("Current password must be at least 6 characters.", {
         position: "top-center",
       });
       return;
     }
 
-    if (newPassword.length < PASSWORD_MIN) {
-      toast.error(`New password must be at least ${PASSWORD_MIN} characters.`, {
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters.", {
         position: "top-center",
       });
       return;

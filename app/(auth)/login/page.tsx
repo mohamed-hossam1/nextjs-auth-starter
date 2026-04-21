@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { AuthForm } from "@/components/form/AuthForm";
 
 export default function LoginPage() {
@@ -10,13 +12,15 @@ export default function LoginPage() {
         </p>
       </div>
       <div className="w-full">
-        <AuthForm
-          formType="LOGIN"
-          defaultValues={{
-            email: "",
-            password: "",
-          }}
-        />
+        <Suspense fallback={null}>
+          <AuthForm
+            formType="LOGIN"
+            defaultValues={{
+              email: "",
+              password: "",
+            }}
+          />
+        </Suspense>
       </div>
     </div>
   );

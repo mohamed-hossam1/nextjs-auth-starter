@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 import { LoginSchema, RegisterSchema } from "@/lib/schema/auth-schema";
 import { login, register, signInWithGoogle } from "@/actions/auth";
@@ -34,10 +34,27 @@ type AuthFormProps = {
   formType: "LOGIN" | "REGISTER";
 };
 
+function resolveNextRedirect(raw: string | null): string {
+  if (!raw) return ROUTES.ADMIN;
+  if (!raw.startsWith("/")) return ROUTES.ADMIN;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return ROUTES.ADMIN;
+  if (raw.includes("\\")) return ROUTES.ADMIN;
+  if (
+    raw === ROUTES.LOGIN ||
+    raw === ROUTES.REGISTER ||
+    raw.startsWith(`${ROUTES.LOGIN}?`) ||
+    raw.startsWith(`${ROUTES.REGISTER}?`)
+  ) {
+    return ROUTES.ADMIN;
+  }
+  return raw;
+}
+
 export function AuthForm({ defaultValues, formType }: AuthFormProps) {
   const isSignIn = formType === "LOGIN";
   const formId = "auth-form";
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -66,7 +83,8 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
     if (isSignIn) {
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       queryClient.removeQueries({ queryKey: accountQueryKey });
-      router.replace(ROUTES.ADMIN);
+      const destination = resolveNextRedirect(searchParams?.get("next") ?? null);
+      router.replace(destination);
       router.refresh();
       return;
     }
@@ -80,7 +98,7 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
     if (oauthLoading) return;
     setOauthLoading(true);
     try {
-      const result = await signInWithGoogle(formType);
+      const result = await signInWithGoogle();
       if (!result.success) {
         toast.error(result.message, { position: "top-center" });
         return;

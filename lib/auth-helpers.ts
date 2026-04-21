@@ -7,9 +7,9 @@ import { AppError } from "@/lib/handleErrors/error";
 
 export type PublicSession = {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt: Date;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
   ipAddress: string | null;
   userAgent: string | null;
 };
@@ -20,8 +20,8 @@ export type PublicUser = {
   email: string;
   emailVerified: boolean;
   image: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AuthenticatedContext = {
@@ -40,9 +40,9 @@ type RawUser = NonNullable<
 export function toPublicSession(session: RawSession): PublicSession {
   return {
     id: session.id,
-    createdAt: session.createdAt,
-    updatedAt: session.updatedAt,
-    expiresAt: session.expiresAt,
+    createdAt: session.createdAt.toISOString(),
+    updatedAt: session.updatedAt.toISOString(),
+    expiresAt: session.expiresAt.toISOString(),
     ipAddress: session.ipAddress ?? null,
     userAgent: session.userAgent ?? null,
   };
@@ -55,11 +55,10 @@ export function toPublicUser(user: RawUser): PublicUser {
     email: user.email,
     emailVerified: user.emailVerified,
     image: user.image ?? null,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
   };
 }
-
 
 export async function getSession(): Promise<AuthenticatedContext | null> {
   const result = await auth.api.getSession({ headers: await headers() });
@@ -68,7 +67,7 @@ export async function getSession(): Promise<AuthenticatedContext | null> {
   }
   return {
     session: toPublicSession(result.session),
-    user: toPublicUser( result.user),
+    user: toPublicUser(result.user),
   };
 }
 

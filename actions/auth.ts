@@ -99,7 +99,7 @@ export async function login(formData: z.infer<typeof LoginSchema>) {
   });
 }
 
-export async function signInWithGoogle(_authType: "LOGIN" | "REGISTER") {
+export async function signInWithGoogle() {
   return handleAction(async () => {
     try {
       return await auth.api.signInSocial({

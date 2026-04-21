@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { AuthForm } from "@/components/form/AuthForm";
 
 export default function RegisterPage() {
@@ -11,17 +13,18 @@ export default function RegisterPage() {
           Please fill in the following information to register your account.
         </p>
       </div>
-      <div className="w-full" >
-        <AuthForm 
-          formType="REGISTER"
-          defaultValues={{
-            name: "",
-            email: "",
-            password: "",
-          }}
-        />
+      <div className="w-full">
+        <Suspense fallback={null}>
+          <AuthForm
+            formType="REGISTER"
+            defaultValues={{
+              name: "",
+              email: "",
+              password: "",
+            }}
+          />
+        </Suspense>
       </div>
     </div>
   );
 }
-

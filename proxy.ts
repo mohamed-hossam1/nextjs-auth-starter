@@ -16,6 +16,8 @@ const AUTH_PREFIXES = [
   ROUTES.VERIFY,
 ] as const;
 
+const REAUTH_PARAM = "reauth";
+
 function isUnder(pathname: string, prefixes: readonly string[]): boolean {
   for (const prefix of prefixes) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
@@ -32,8 +34,16 @@ function hasSessionCookie(request: NextRequest): boolean {
   return false;
 }
 
+function clearSessionCookies(response: NextResponse): NextResponse {
+  for (const name of SESSION_COOKIE_NAMES) {
+    response.cookies.delete(name);
+  }
+  return response;
+}
+
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
   const protectedRoute = isUnder(pathname, PROTECTED_PREFIXES);
   const authRoute = isUnder(pathname, AUTH_PREFIXES);
   if (!protectedRoute && !authRoute) {
@@ -49,9 +59,13 @@ export function proxy(request: NextRequest) {
   }
 
   if (authRoute && isAuthed) {
+    if (searchParams.has(REAUTH_PARAM)) {
+      return clearSessionCookies(NextResponse.next());
+    }
+
     const hasOptIn =
-      request.nextUrl.searchParams.has("token") ||
-      request.nextUrl.searchParams.has("type") ||
+      searchParams.has("token") ||
+      searchParams.has("type") ||
       pathname.startsWith(ROUTES.VERIFY);
     if (!hasOptIn) {
       return NextResponse.redirect(new URL(ROUTES.ADMIN, request.url));

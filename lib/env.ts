@@ -27,8 +27,7 @@ const NEXT_PUBLIC_APP_URL = stripTrailingSlash(
   ),
 );
 
-
-let serverEnv: {
+let serverEnvCache: {
   DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
@@ -46,9 +45,9 @@ function getServerEnv() {
         "Move this access to a server module ('use server' or RSC).",
     );
   }
-  if (serverEnv) return serverEnv;
+  if (serverEnvCache) return serverEnvCache;
 
-  serverEnv = {
+  serverEnvCache = {
     DATABASE_URL: readRequired("DATABASE_URL", process.env.DATABASE_URL),
     BETTER_AUTH_SECRET: readRequired(
       "BETTER_AUTH_SECRET",
@@ -79,12 +78,11 @@ function getServerEnv() {
       | "production",
   };
 
-  return serverEnv;
+  return serverEnvCache;
 }
 
 export const publicEnv = {
   appUrl: NEXT_PUBLIC_APP_URL,
 } as const;
 
-export const serverEnv_ = getServerEnv;
 export { getServerEnv as serverEnv };

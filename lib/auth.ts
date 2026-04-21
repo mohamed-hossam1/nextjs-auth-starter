@@ -10,6 +10,17 @@ import { serverEnv } from "./env";
 
 const env = serverEnv();
 
+async function bestEffortEmail(
+  label: string,
+  send: () => Promise<void>,
+): Promise<void> {
+  try {
+    await send();
+  } catch (error) {
+    console.error(`[email:${label}] send failed (best-effort):`, error);
+  }
+}
+
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
@@ -29,7 +40,9 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     maxPasswordLength: 100,
     sendResetPassword: async ({ user, url }) => {
-      await sendPasswordResetEmail({ user, url });
+      await bestEffortEmail("password-reset", () =>
+        sendPasswordResetEmail({ user, url }),
+      );
     },
   },
 
@@ -37,10 +50,12 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmailVerificationEmail({ user, url });
+      await bestEffortEmail("verification", () =>
+        sendEmailVerificationEmail({ user, url }),
+      );
     },
     async afterEmailVerification(user) {
-      await sendWelcomeEmail({ user });
+      await bestEffortEmail("welcome", () => sendWelcomeEmail({ user }));
     },
   },
 
@@ -55,10 +70,11 @@ export const auth = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5,
+      maxAge: 60,
     },
   },
-  
+
+
   plugins: [nextCookies()],
   database: drizzleAdapter(db, {
     provider: "pg",
