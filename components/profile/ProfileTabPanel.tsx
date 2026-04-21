@@ -7,14 +7,14 @@ import { TabsContent } from "@/components/ui/tabs";
 import { getErrorMessage } from "@/lib/handleErrors/error";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import { getInitials } from "@/lib/utils";
+import type { PublicUser } from "@/lib/auth-helpers";
 import type { SessionQueryData } from "@/hooks/session";
 import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { User } from "better-auth";
 
-export function ProfileTabPanel({ user }: { user: User }) {
+export function ProfileTabPanel({ user }: { user: PublicUser }) {
   const queryClient = useQueryClient();
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(user.name);

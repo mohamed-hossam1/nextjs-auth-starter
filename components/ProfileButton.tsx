@@ -1,15 +1,15 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { PublicUser } from "@/lib/auth-helpers";
 import { cn, getInitials } from "@/lib/utils";
-import type { User } from "better-auth";
 
 export function ProfileButton({
   user,
   isOpen,
   onOpenProfile,
 }: {
-  user: User;
+  user: PublicUser;
   isOpen: boolean;
   onOpenProfile: () => void;
 }) {

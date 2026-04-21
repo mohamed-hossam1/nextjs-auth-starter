@@ -1,19 +1,23 @@
-import { pingram } from "./send-email";
+import "server-only";
+
+import { pingram, type EmailRecipient } from "./send-email";
+
+type SendVerificationEmailArgs = {
+  user: EmailRecipient;
+  url: string;
+  newEmail?: string;
+};
 
 export async function sendEmailVerificationEmail({
   user,
   url,
   newEmail,
-}: {
-  user: any;
-  url: string;
-  newEmail?: string;
-}) {
+}: SendVerificationEmailArgs) {
   await pingram.send({
     type: "traqon_sender",
     to: {
       id: user.id,
-      email: newEmail ? newEmail : user.email,
+      email: newEmail ?? user.email,
     },
     parameters: {
       verification_url: url,

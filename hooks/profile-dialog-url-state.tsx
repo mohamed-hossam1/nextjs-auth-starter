@@ -1,55 +1,86 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import {
   parseProfileDialogTab,
   type ProfileDialogTab,
 } from "@/lib/profile-dialog";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
 
 const QUERY_PARAM = "open";
+const DEFAULT_TAB: ProfileDialogTab = "profile";
 
+type DialogState = {
+  isOpen: boolean;
+  activeTab: ProfileDialogTab;
+};
+
+function deriveState(value: string | null | undefined): DialogState {
+  const parsed = parseProfileDialogTab(value ?? null);
+  return {
+    isOpen: parsed !== null,
+    activeTab: parsed ?? DEFAULT_TAB,
+  };
+}
 
 export function useProfileDialogUrlState() {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const openParam = searchParams.get(QUERY_PARAM);
-  const parsedTab = parseProfileDialogTab(openParam);
-
-  const isOpen = parsedTab !== null;
-  const activeTab: ProfileDialogTab = parsedTab ?? "profile";
-
-  const buildHref = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      const params = new URLSearchParams(searchParams.toString());
-      mutate(params);
-      const queryString = params.toString();
-      return queryString ? `${pathname}?${queryString}` : pathname;
-    },
-    [pathname, searchParams],
+  const [state, setState] = useState<DialogState>(() =>
+    deriveState(searchParams?.get(QUERY_PARAM) ?? null),
   );
+
+  useEffect(() => {
+    function handlePopState() {
+      const params = new URLSearchParams(window.location.search);
+      setState(deriveState(params.get(QUERY_PARAM)));
+    }
+
+    handlePopState();
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const writeUrl = useCallback((tab: ProfileDialogTab | null) => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (tab === null) {
+      params.delete(QUERY_PARAM);
+    } else {
+      params.set(QUERY_PARAM, tab);
+    }
+
+    const queryString = params.toString();
+    const newUrl = queryString
+      ? `${window.location.pathname}?${queryString}`
+      : window.location.pathname;
+
+    window.history.replaceState(window.history.state, "", newUrl);
+  }, []);
 
   const openTab = useCallback(
     (tab: ProfileDialogTab) => {
-      const href = buildHref((params) => {
-        params.set(QUERY_PARAM, tab);
-      });
-      router.replace(href, { scroll: false });
+      setState({ isOpen: true, activeTab: tab });
+      writeUrl(tab);
     },
-    [buildHref, router],
+    [writeUrl],
   );
 
   const closeDialog = useCallback(() => {
-    const href = buildHref((params) => {
-      params.delete(QUERY_PARAM);
-    });
-    router.replace(href, { scroll: false });
-  }, [buildHref, router]);
+    setState((prev) => ({ ...prev, isOpen: false }));
+    writeUrl(null);
+  }, [writeUrl]);
 
   return useMemo(
-    () => ({ isOpen, activeTab, openTab, closeDialog }),
-    [isOpen, activeTab, openTab, closeDialog],
+    () => ({
+      isOpen: state.isOpen,
+      activeTab: state.activeTab,
+      openTab,
+      closeDialog,
+    }),
+    [state.isOpen, state.activeTab, openTab, closeDialog],
   );
 }

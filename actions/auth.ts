@@ -1,20 +1,51 @@
 "use server";
-import { headers } from "next/headers";
 
-import { handleAction } from "@/lib/handleErrors/action-handler";
+import { headers } from "next/headers";
+import { isAPIError } from "better-auth/api";
+import { z } from "zod";
+
+import { ROUTES } from "@/constants/routes";
 import { auth } from "@/lib/auth";
+import { handleAction } from "@/lib/handleErrors/action-handler";
 import { AppError } from "@/lib/handleErrors/error";
+import { isValidateEmail } from "@/lib/handleErrors/email-validation";
+import { zodValidate } from "@/lib/handleErrors/zod-validate";
 import {
   ForgotPasswordSchema,
   LoginSchema,
   RegisterSchema,
   ResetPasswordSchema,
 } from "@/lib/schema/auth-schema";
-import { zodValidate } from "@/lib/handleErrors/zod-validate";
-import { z } from "zod";
-import { isValidateEmail } from "@/lib/handleErrors/email-validation";
-import { ROUTES } from "@/constants/routes";
-import { isAPIError } from "better-auth/api";
+
+const GENERIC_AUTH_ERROR = "Invalid email or password.";
+const GENERIC_RESET_RESPONSE = {
+  message:
+    "If an account exists for this email, a password reset link has been sent.",
+};
+
+type ApiErrorLike = {
+  message?: string;
+  statusCode?: number;
+  status?: string;
+};
+
+function mapAuthError(
+  error: unknown,
+  context: string,
+  options: { enumerationSafe: boolean },
+): AppError {
+  if (isAPIError(error)) {
+    const apiError = error as unknown as ApiErrorLike;
+    const status = apiError.statusCode ?? 400;
+    if (options.enumerationSafe) {
+      console.warn(`[auth:${context}]`, apiError.message ?? apiError.status);
+      return new AppError(GENERIC_AUTH_ERROR, status >= 500 ? 500 : 400);
+    }
+    return new AppError(apiError.message ?? GENERIC_AUTH_ERROR, status);
+  }
+  console.error(`[auth:${context}] internal error:`, error);
+  return new AppError("Something went wrong", 500);
+}
 
 export async function register(formData: z.infer<typeof RegisterSchema>) {
   return handleAction(async () => {
@@ -24,9 +55,8 @@ export async function register(formData: z.infer<typeof RegisterSchema>) {
       throw new AppError(emailError, 400);
     }
 
-    let response;
     try {
-      response = await auth.api.signUpEmail({
+      return await auth.api.signUpEmail({
         headers: await headers(),
         body: {
           name: validated.name,
@@ -37,22 +67,25 @@ export async function register(formData: z.infer<typeof RegisterSchema>) {
       });
     } catch (error) {
       if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
+        const apiError = error as unknown as ApiErrorLike;
+        const message = apiError.message ?? "";
+        if (apiError.statusCode === 422 || /already/i.test(message)) {
+          throw new AppError(
+            "We couldn't create that account. Please try again or sign in.",
+            400,
+          );
+        }
       }
-      console.error("Signup internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapAuthError(error, "register", { enumerationSafe: true });
     }
-    return response;
   });
 }
 
 export async function login(formData: z.infer<typeof LoginSchema>) {
   return handleAction(async () => {
     const validated = zodValidate(LoginSchema, formData);
-
-    let response;
     try {
-      response = await auth.api.signInEmail({
+      return await auth.api.signInEmail({
         headers: await headers(),
         body: {
           email: validated.email,
@@ -61,23 +94,15 @@ export async function login(formData: z.infer<typeof LoginSchema>) {
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Login internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapAuthError(error, "login", { enumerationSafe: true });
     }
-    return response;
   });
 }
 
-export async function signInWithGoogle(authType: "LOGIN" | "REGISTER") {
+export async function signInWithGoogle(_authType: "LOGIN" | "REGISTER") {
   return handleAction(async () => {
-    void authType;
-
-    let response;
     try {
-      response = await auth.api.signInSocial({
+      return await auth.api.signInSocial({
         headers: await headers(),
         body: {
           provider: "google",
@@ -85,13 +110,8 @@ export async function signInWithGoogle(authType: "LOGIN" | "REGISTER") {
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Google sign in internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapAuthError(error, "google", { enumerationSafe: true });
     }
-    return response;
   });
 }
 
@@ -100,10 +120,8 @@ export async function forgotPassword(
 ) {
   return handleAction(async () => {
     const validated = zodValidate(ForgotPasswordSchema, formData);
-
-    let response;
     try {
-      response = await auth.api.requestPasswordReset({
+      await auth.api.requestPasswordReset({
         body: {
           email: validated.email,
           redirectTo: `${ROUTES.RESETPASSWORD}?type=forgot`,
@@ -111,12 +129,15 @@ export async function forgotPassword(
       });
     } catch (error) {
       if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
+        console.warn(
+          "[auth:forgotPassword] suppressed:",
+          (error as unknown as ApiErrorLike).message,
+        );
+      } else {
+        console.error("[auth:forgotPassword] internal error:", error);
       }
-      console.error("Forgot password internal server error:", error);
-      throw new AppError("Something went wrong", 500);
     }
-    return response;
+    return GENERIC_RESET_RESPONSE;
   });
 }
 
@@ -125,40 +146,28 @@ export async function resetPassword(
 ) {
   return handleAction(async () => {
     const validated = zodValidate(ResetPasswordSchema, formData);
-
-    let response;
+    if (!formData.token || typeof formData.token !== "string") {
+      throw new AppError("Invalid or expired reset link.", 400);
+    }
     try {
-      response = await auth.api.resetPassword({
+      return await auth.api.resetPassword({
         body: {
           newPassword: validated.password,
           token: formData.token,
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Reset password internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapAuthError(error, "resetPassword", { enumerationSafe: false });
     }
-    return response;
   });
 }
 
 export async function signOut() {
   return handleAction(async () => {
-    let response;
     try {
-      response = await auth.api.signOut({
-        headers: await headers(),
-      });
+      return await auth.api.signOut({ headers: await headers() });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Sign out internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapAuthError(error, "signOut", { enumerationSafe: false });
     }
-    return response;
   });
 }

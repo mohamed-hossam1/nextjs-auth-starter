@@ -1,10 +1,4 @@
-import {
-  Globe,
-  Laptop,
-  Monitor,
-  Smartphone,
-  Tablet,
-} from "lucide-react";
+import { Globe, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import type { ComponentProps } from "react";
 
 export type Device = "desktop" | "laptop" | "mobile" | "tablet" | "unknown";
@@ -39,10 +33,6 @@ const UNKNOWN_INFO: BrowserInfo = {
   os: "Unknown",
 };
 
-/**
- * Parse a User-Agent string into a normalized browser/os/device descriptor.
- * Implementation is intentionally lightweight to avoid pulling in a UA parser.
- */
 export function getBrowserInfo(
   userAgent: string | null | undefined,
 ): BrowserInfo {
@@ -106,9 +96,6 @@ export function getBrowserInfo(
   return { device, browser, os };
 }
 
-/**
- * Build a human-readable label like "Chrome on macOS".
- */
 export function getBrowserInformation(info: BrowserInfo): string {
   const { browser, os } = info;
 
@@ -126,11 +113,6 @@ export function getBrowserInformation(info: BrowserInfo): string {
 
 type IconProps = ComponentProps<typeof Monitor>;
 
-/**
- * Stable React component that renders the right Lucide icon for a device.
- * Encapsulates the runtime-pick so callers don't trigger the
- * `react-hooks/static-components` rule.
- */
 export function DeviceIcon({
   device,
   ...props

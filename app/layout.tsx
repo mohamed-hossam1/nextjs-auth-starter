@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import { DM_Serif_Display, DM_Serif_Text, IBM_Plex_Mono } from "next/font/google";
+import { Toaster } from "sonner";
+
 import { ThemeProvider } from "@/providers/theme-provider";
 import { StateProvider } from "@/providers/state-provider";
 import QueryProvider from "@/providers/query-provider";
-import { DM_Serif_Display, DM_Serif_Text, IBM_Plex_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { publicEnv } from "@/lib/env";
+
+import "./globals.css";
 
 const serifDisplay = DM_Serif_Display({
   weight: "400",
@@ -25,7 +28,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL!),
+  metadataBase: new URL(publicEnv.appUrl),
   title: {
     template: "%s | mocode",
     default: "mocode",

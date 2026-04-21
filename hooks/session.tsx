@@ -1,25 +1,20 @@
 "use client";
 
-import { getCurrentSession } from "@/actions/profile";
-import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import type { ActionResult } from "@/types/global";
-import type { Session, User } from "better-auth";
 import { useQuery } from "@tanstack/react-query";
 
-export type SessionPayload = {
-  session: Session;
-  user: User;
-};
+import { getCurrentSession } from "@/actions/profile";
+import type { AuthenticatedContext } from "@/lib/auth-helpers";
+import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
+import type { ActionResult } from "@/types/global";
 
+
+export type SessionPayload = AuthenticatedContext;
 export type SessionQueryData = ActionResult<SessionPayload | null>;
 
 export function useSession() {
   return useQuery<SessionQueryData>({
     queryKey: sessionQueryKey,
-    queryFn: async () => {
-      const res = await getCurrentSession();
-      return res;
-    },
+    queryFn: () => getCurrentSession(),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
@@ -35,6 +30,5 @@ export function getAuthenticatedSession(
   ) {
     return null;
   }
-
   return sessionData.data;
 }

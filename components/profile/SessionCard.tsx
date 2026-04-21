@@ -1,12 +1,11 @@
 "use client";
 
-import { Session } from "better-auth";
-
 import {
   DeviceIcon,
   getBrowserInfo,
   getBrowserInformation,
 } from "@/lib/visitorInfo/browserInfo";
+import type { PublicSession } from "@/lib/auth-helpers";
 import { cn, formatDate } from "@/lib/utils";
 
 export default function SessionCard({
@@ -15,13 +14,12 @@ export default function SessionCard({
   isRevoking,
   onRevoke,
 }: {
-  session: Session;
+  session: PublicSession;
   isCurrent?: boolean;
   isRevoking?: boolean;
   onRevoke?: () => void;
 }) {
-  const resolvedUserAgent = session.userAgent;
-  const browserInfo = getBrowserInfo(resolvedUserAgent);
+  const browserInfo = getBrowserInfo(session.userAgent);
   const label = getBrowserInformation(browserInfo);
   const signedInAt = session.createdAt
     ? formatDate(new Date(session.createdAt))

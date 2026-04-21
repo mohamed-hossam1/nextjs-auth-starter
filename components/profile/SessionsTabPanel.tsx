@@ -1,21 +1,27 @@
 "use client";
 
-import { getSessions, revokeSession } from "@/actions/profile";
-import SessionCard from "@/components/profile/SessionCard";
-import { TabsContent } from "@/components/ui/tabs";
-import { getErrorMessage } from "@/lib/handleErrors/error";
-import { accountSessionsQueryKey } from "@/lib/reactQuery/query-keys";
 import { AlertCircle, ShieldCheck } from "lucide-react";
-import type { Session } from "better-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { listSessionsPublic, revokeSessionById } from "@/actions/profile";
+import SessionCard from "@/components/profile/SessionCard";
+import { TabsContent } from "@/components/ui/tabs";
+import { getErrorMessage } from "@/lib/handleErrors/error";
+import type { PublicSession } from "@/lib/auth-helpers";
+import { accountSessionsQueryKey } from "@/lib/reactQuery/query-keys";
+
 export function SessionsTabPanel({
-  currentSessionToken,
+  currentSessionId,
   isOpen,
   isActive,
 }: {
-  currentSessionToken: string;
+  /**
+   * Identifier (NOT the token) of the session associated with this browser.
+   * Used purely to highlight the "this device" card. The session token is
+   * never exposed to the client — see `lib/auth-helpers.ts`.
+   */
+  currentSessionId: string;
   isOpen: boolean;
   isActive: boolean;
 }) {
@@ -25,50 +31,33 @@ export function SessionsTabPanel({
     queryKey: accountSessionsQueryKey,
     enabled: isOpen && isActive,
     staleTime: 60 * 1000,
-    queryFn: async () => {
-      const result = await getSessions();
-
+    queryFn: async (): Promise<PublicSession[]> => {
+      const result = await listSessionsPublic();
       if (!result.success) {
         throw new Error(result.message || "Failed to load active sessions.");
       }
-
-      if (!result.data) {
-        throw new Error("Failed to load active sessions.");
-      }
-
-      return result.data as Session[];
+      return result.data;
     },
   });
 
   const revokeSessionMutation = useMutation({
-    mutationFn: async ({
-      token,
-      sessionId,
-    }: {
-      token: string;
-      sessionId: string;
-    }) => {
-      const result = await revokeSession(token);
-
+    mutationFn: async ({ sessionId }: { sessionId: string }) => {
+      const result = await revokeSessionById(sessionId);
       if (!result.success) {
         throw new Error(result.message || "Failed to revoke the session.");
       }
-
       return { sessionId };
     },
     onSuccess: ({ sessionId }) => {
-      queryClient.setQueryData<Session[] | undefined>(
+      queryClient.setQueryData<PublicSession[] | undefined>(
         accountSessionsQueryKey,
         (currentSessions) =>
           currentSessions?.filter((session) => session.id !== sessionId),
       );
-
       toast.success("Session revoked.", { position: "top-center" });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-center",
-      });
+      toast.error(getErrorMessage(error), { position: "top-center" });
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: accountSessionsQueryKey });
@@ -77,10 +66,10 @@ export function SessionsTabPanel({
 
   const sessions = sessionsQuery.data ?? [];
   const currentSession = sessions.find(
-    (session) => session.token === currentSessionToken,
+    (session) => session.id === currentSessionId,
   );
   const otherSessions = sessions.filter(
-    (session) => session.token !== currentSessionToken,
+    (session) => session.id !== currentSessionId,
   );
   const revokingSessionId = revokeSessionMutation.isPending
     ? revokeSessionMutation.variables.sessionId
@@ -103,7 +92,7 @@ export function SessionsTabPanel({
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-16 animate-pulse rounded-none bg-muted/60"
+                className="h-16 animate-pulse rounded-none bg-foreground/10"
               />
             ))}
           </div>
@@ -170,10 +159,7 @@ export function SessionsTabPanel({
                     session={session}
                     isRevoking={revokingSessionId === session.id}
                     onRevoke={() =>
-                      revokeSessionMutation.mutate({
-                        token: session.token,
-                        sessionId: session.id,
-                      })
+                      revokeSessionMutation.mutate({ sessionId: session.id })
                     }
                   />
                 ))}

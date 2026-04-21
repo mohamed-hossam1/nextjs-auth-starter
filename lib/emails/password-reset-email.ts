@@ -1,12 +1,16 @@
-import { pingram } from "./send-email";
+import "server-only";
+
+import { pingram, type EmailRecipient } from "./send-email";
+
+type SendPasswordResetEmailArgs = {
+  user: EmailRecipient;
+  url: string;
+};
 
 export async function sendPasswordResetEmail({
   user,
   url,
-}: {
-  user: any;
-  url: string;
-}) {
+}: SendPasswordResetEmailArgs) {
   await pingram.send({
     type: "traqon_sender",
     to: {

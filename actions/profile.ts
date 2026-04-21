@@ -1,80 +1,88 @@
 "use server";
-import { headers } from "next/headers";
 
-import { handleAction } from "@/lib/handleErrors/action-handler";
+import { headers } from "next/headers";
+import { isAPIError } from "better-auth/api";
+import { z } from "zod";
+
+import { ROUTES } from "@/constants/routes";
 import { auth } from "@/lib/auth";
+import {
+  type AuthenticatedContext,
+  type PublicSession,
+  requireSession,
+  toPublicSession,
+  toPublicUser,
+} from "@/lib/auth-helpers";
+import { handleAction } from "@/lib/handleErrors/action-handler";
 import { AppError } from "@/lib/handleErrors/error";
 import { zodValidate } from "@/lib/handleErrors/zod-validate";
-import { z } from "zod";
-import { ROUTES } from "@/constants/routes";
-import { isAPIError } from "better-auth/api";
 import {
   ChangePasswordSchema,
   UpdateProfileSchema,
 } from "@/lib/schema/profile-schema";
 
+type ApiErrorLike = { message?: string; statusCode?: number };
+
+function mapApiError(error: unknown, context: string): AppError {
+  if (isAPIError(error)) {
+    const apiError = error as unknown as ApiErrorLike;
+    return new AppError(
+      apiError.message ?? "Request failed",
+      apiError.statusCode ?? 400,
+    );
+  }
+  console.error(`[profile:${context}] internal error:`, error);
+  return new AppError("Something went wrong", 500);
+}
+
 export async function updateProfile(
   formData: z.infer<typeof UpdateProfileSchema>,
 ) {
   return handleAction(async () => {
+    await requireSession();
     const validated = zodValidate(UpdateProfileSchema, formData);
-
-    let response;
     try {
-      response = await auth.api.updateUser({
+      return await auth.api.updateUser({
         headers: await headers(),
-        body: {
-          name: validated.name,
-        },
+        body: { name: validated.name },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Update profile internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapApiError(error, "updateProfile");
     }
-    return response;
   });
 }
 
 export async function hasPassword() {
   return handleAction(async () => {
-    let response;
+    await requireSession();
     try {
       const accounts = await auth.api.listUserAccounts({
         headers: await headers(),
       });
-      response = accounts.some((a) => a.providerId === "credential");
+      return accounts.some((a) => a.providerId === "credential");
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Has password internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapApiError(error, "hasPassword");
     }
-    return response;
   });
 }
 
-export async function sendPasswordResetEmail(email: string) {
+export async function sendCurrentUserPasswordResetEmail() {
   return handleAction(async () => {
-    let response;
+    const { user } = await requireSession();
     try {
-      response = await auth.api.requestPasswordReset({
+      return await auth.api.requestPasswordReset({
         body: {
-          email,
+          email: user.email,
           redirectTo: `${ROUTES.RESETPASSWORD}?type=reset`,
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Send password reset email internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      console.warn(
+        "[profile:sendCurrentUserPasswordResetEmail] suppressed:",
+        (error as ApiErrorLike).message,
+      );
+      return { message: "If your account is valid, a reset email was sent." };
     }
-    return response;
   });
 }
 
@@ -82,11 +90,10 @@ export async function changePassword(
   formData: z.infer<typeof ChangePasswordSchema>,
 ) {
   return handleAction(async () => {
+    await requireSession();
     const validated = zodValidate(ChangePasswordSchema, formData);
-
-    let response;
     try {
-      response = await auth.api.changePassword({
+      return await auth.api.changePassword({
         headers: await headers(),
         body: {
           newPassword: validated.newPassword,
@@ -94,69 +101,61 @@ export async function changePassword(
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Change password internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapApiError(error, "changePassword");
     }
-    return response;
   });
 }
 
-export async function getSessions() {
-  return handleAction(async () => {
-    let response;
+export async function listSessionsPublic() {
+  return handleAction<PublicSession[]>(async () => {
+    await requireSession();
     try {
-      response = await auth.api.listSessions({
+      const sessions = await auth.api.listSessions({
         headers: await headers(),
       });
+      return sessions.map((s) => toPublicSession(s));
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Get sessions internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapApiError(error, "listSessionsPublic");
     }
-    return response;
   });
 }
 
 export async function getCurrentSession() {
-  return handleAction(async () => {
-    let response;
+  return handleAction<AuthenticatedContext | null>(async () => {
     try {
-      response = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const result = await auth.api.getSession({ headers: await headers() });
+      if (!result?.session || !result.user) return null;
+      return {
+        session: toPublicSession(result.session),
+        user: toPublicUser(result.user),
+      };
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Get current session internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      throw mapApiError(error, "getCurrentSession");
     }
-    return response;
   });
 }
 
-export async function revokeSession(token: string) {
+export async function revokeSessionById(sessionId: string) {
   return handleAction(async () => {
-    let response;
+    await requireSession();
+    if (!sessionId || typeof sessionId !== "string") {
+      throw new AppError("Invalid session id", 400);
+    }
     try {
-      response = await auth.api.revokeSession({
+      const sessions = await auth.api.listSessions({
         headers: await headers(),
-        body: {
-          token,
-        },
+      });
+      const target = sessions.find((s) => s.id === sessionId);
+      if (!target) {
+        throw new AppError("Session not found", 404);
+      }
+      return await auth.api.revokeSession({
+        headers: await headers(),
+        body: { token: target.token },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        throw new AppError(error.message, error.statusCode);
-      }
-      console.error("Revoke session internal server error:", error);
-      throw new AppError("Something went wrong", 500);
+      if (error instanceof AppError) throw error;
+      throw mapApiError(error, "revokeSessionById");
     }
-    return response;
   });
 }

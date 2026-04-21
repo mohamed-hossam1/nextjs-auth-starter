@@ -1,26 +1,29 @@
 "use client";
 
-import {
-  changePassword,
-  hasPassword,
-  sendPasswordResetEmail,
-} from "@/actions/profile";
-import { Input } from "@/components/ui/input";
-import { TabsContent } from "@/components/ui/tabs";
-import { getErrorMessage } from "@/lib/handleErrors/error";
-import { accountHasPasswordQueryKey } from "@/lib/reactQuery/query-keys";
 import { AlertCircle, Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { User } from "better-auth";
+
+import {
+  changePassword,
+  hasPassword,
+  sendCurrentUserPasswordResetEmail,
+} from "@/actions/profile";
+import { Input } from "@/components/ui/input";
+import { TabsContent } from "@/components/ui/tabs";
+import type { PublicUser } from "@/lib/auth-helpers";
+import { getErrorMessage } from "@/lib/handleErrors/error";
+import { accountHasPasswordQueryKey } from "@/lib/reactQuery/query-keys";
+
+const PASSWORD_MIN = 8;
 
 export function SecurityTabPanel({
   user,
   isOpen,
   isActive,
 }: {
-  user: User;
+  user: PublicUser;
   isOpen: boolean;
   isActive: boolean;
 }) {
@@ -35,13 +38,11 @@ export function SecurityTabPanel({
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const result = await hasPassword();
-
       if (!result.success) {
         throw new Error(
           result.message || "Failed to load your security settings.",
         );
       }
-
       return Boolean(result.data);
     },
   });
@@ -52,7 +53,6 @@ export function SecurityTabPanel({
       newPassword: string;
     }) => {
       const result = await changePassword(formData);
-
       if (!result.success) {
         throw new Error(result.message || "Failed to change your password.");
       }
@@ -67,16 +67,16 @@ export function SecurityTabPanel({
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-center",
-      });
+      toast.error(getErrorMessage(error), { position: "top-center" });
     },
   });
 
   const sendResetEmailMutation = useMutation({
     mutationFn: async () => {
-      const result = await sendPasswordResetEmail(user.email);
-
+      // SECURITY: do NOT pass an email in. The server action derives it from
+      // the authenticated session, so users can't trigger reset emails to
+      // arbitrary inboxes.
+      const result = await sendCurrentUserPasswordResetEmail();
       if (!result.success) {
         throw new Error(
           result.message || "Failed to send the password reset email.",
@@ -89,24 +89,22 @@ export function SecurityTabPanel({
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-center",
-      });
+      toast.error(getErrorMessage(error), { position: "top-center" });
     },
   });
 
   function handleChangePassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (currentPassword.length < 6) {
-      toast.error("Current password must be at least 6 characters.", {
+    if (currentPassword.length < PASSWORD_MIN) {
+      toast.error(`Current password must be at least ${PASSWORD_MIN} characters.`, {
         position: "top-center",
       });
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters.", {
+    if (newPassword.length < PASSWORD_MIN) {
+      toast.error(`New password must be at least ${PASSWORD_MIN} characters.`, {
         position: "top-center",
       });
       return;
@@ -139,8 +137,8 @@ export function SecurityTabPanel({
 
         {isLoadingPasswordState && (
           <div className="flex flex-col gap-3">
-            <div className="h-10 animate-pulse rounded-none bg-muted/60" />
-            <div className="h-10 animate-pulse rounded-none bg-muted/60" />
+            <div className="h-10 animate-pulse rounded-none bg-foreground/10" />
+            <div className="h-10 animate-pulse rounded-none bg-foreground/10" />
           </div>
         )}
 
@@ -212,6 +210,7 @@ export function SecurityTabPanel({
                       ? "Hide current password"
                       : "Show current password"
                   }
+                  aria-pressed={showCurrentPassword}
                 >
                   {showCurrentPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -249,6 +248,7 @@ export function SecurityTabPanel({
                       ? "Hide new password"
                       : "Show new password"
                   }
+                  aria-pressed={showNewPassword}
                 >
                   {showNewPassword ? (
                     <EyeOff className="h-4 w-4" />
