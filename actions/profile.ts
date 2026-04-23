@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { isAPIError } from "better-auth/api";
+import { betterAuthError } from "@/lib/actionHandler/better-auth-error";
 import { z } from "zod";
 
 import { ROUTES } from "@/constants/routes";
@@ -9,153 +9,129 @@ import { auth } from "@/lib/auth";
 import {
   type AuthenticatedContext,
   type PublicSession,
+  getSession,
   requireSession,
   toPublicSession,
-  toPublicUser,
 } from "@/lib/auth-helpers";
-import { handleAction } from "@/lib/handleErrors/action-handler";
-import { AppError } from "@/lib/handleErrors/error";
-import { zodValidate } from "@/lib/handleErrors/zod-validate";
+import { protectedAction } from "@/lib/actionHandler/builders/protected-action";
+import { publicAction } from "@/lib/actionHandler/builders/public-action";
+import { NotFoundError } from "@/lib/actionHandler/errors";
 import {
   ChangePasswordSchema,
   UpdateProfileSchema,
 } from "@/lib/schema/profile-schema";
 
-type ApiErrorLike = { message?: string; statusCode?: number };
+export const updateProfile = protectedAction({
+  name: "profile.updateProfile",
+  input: UpdateProfileSchema,
+}).action(async ({ input }) => {
+  try {
+    return await auth.api.updateUser({
+      headers: await headers(),
+      body: { name: input.name },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "profile:updateProfile");
+  }
+});
 
-function mapApiError(error: unknown, context: string): AppError {
-  if (isAPIError(error)) {
-    const apiError = error as unknown as ApiErrorLike;
-    return new AppError(
-      apiError.message ?? "Request failed",
-      apiError.statusCode ?? 400,
+export const hasPassword = protectedAction({
+  name: "profile.hasPassword",
+}).action(async () => {
+  try {
+    const accounts = await auth.api.listUserAccounts({
+      headers: await headers(),
+    });
+    return accounts.some((a) => a.providerId === "credential");
+  } catch (error) {
+    throw betterAuthError(error, "profile:hasPassword");
+  }
+});
+
+export const sendCurrentUserPasswordResetEmail = protectedAction({
+  name: "profile.sendCurrentUserPasswordResetEmail",
+  output: z.object({ message: z.string() }),
+}).action(async () => {
+  const { user } = await requireSession();
+
+  try {
+    await auth.api.requestPasswordReset({
+      body: {
+        email: user.email,
+        redirectTo: `${ROUTES.RESETPASSWORD}?type=reset`,
+      },
+    });
+  } catch (error) {
+    console.warn(
+      "[profile:sendCurrentUserPasswordResetEmail] suppressed:",
+      (error as { message?: string }).message,
     );
   }
-  console.error(`[profile:${context}] internal error:`, error);
-  return new AppError("Something went wrong", 500);
-}
 
-export async function updateProfile(
-  formData: z.infer<typeof UpdateProfileSchema>,
-) {
-  return handleAction(async () => {
-    await requireSession();
-    const validated = zodValidate(UpdateProfileSchema, formData);
-    try {
-      return await auth.api.updateUser({
-        headers: await headers(),
-        body: { name: validated.name },
-      });
-    } catch (error) {
-      throw mapApiError(error, "updateProfile");
-    }
-  });
-}
+  return { message: "If your account is valid, a reset email was sent." };
+});
 
-export async function hasPassword() {
-  return handleAction(async () => {
-    await requireSession();
-    try {
-      const accounts = await auth.api.listUserAccounts({
-        headers: await headers(),
-      });
-      return accounts.some((a) => a.providerId === "credential");
-    } catch (error) {
-      throw mapApiError(error, "hasPassword");
-    }
-  });
-}
+export const changePassword = protectedAction({
+  name: "profile.changePassword",
+  input: ChangePasswordSchema,
+}).action(async ({ input }) => {
+  try {
+    return await auth.api.changePassword({
+      headers: await headers(),
+      body: {
+        newPassword: input.newPassword,
+        currentPassword: input.currentPassword,
+      },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "profile:changePassword");
+  }
+});
 
-export async function sendCurrentUserPasswordResetEmail() {
-  return handleAction(async () => {
-    const { user } = await requireSession();
-    try {
-      return await auth.api.requestPasswordReset({
-        body: {
-          email: user.email,
-          redirectTo: `${ROUTES.RESETPASSWORD}?type=reset`,
-        },
-      });
-    } catch (error) {
-      console.warn(
-        "[profile:sendCurrentUserPasswordResetEmail] suppressed:",
-        (error as ApiErrorLike).message,
-      );
-      return { message: "If your account is valid, a reset email was sent." };
-    }
-  });
-}
+export const listSessionsPublic = protectedAction({
+  name: "profile.listSessionsPublic",
+}).action(async (): Promise<PublicSession[]> => {
+  try {
+    const sessions = await auth.api.listSessions({
+      headers: await headers(),
+    });
+    return sessions.map((session) => toPublicSession(session));
+  } catch (error) {
+    throw betterAuthError(error, "profile:listSessionsPublic");
+  }
+});
 
-export async function changePassword(
-  formData: z.infer<typeof ChangePasswordSchema>,
-) {
-  return handleAction(async () => {
-    await requireSession();
-    const validated = zodValidate(ChangePasswordSchema, formData);
-    try {
-      return await auth.api.changePassword({
-        headers: await headers(),
-        body: {
-          newPassword: validated.newPassword,
-          currentPassword: validated.currentPassword,
-        },
-      });
-    } catch (error) {
-      throw mapApiError(error, "changePassword");
-    }
-  });
-}
+export const getCurrentSession = publicAction({
+  name: "profile.getCurrentSession",
+}).action(async (): Promise<AuthenticatedContext | null> => {
+  try {
+    return await getSession();
+  } catch (error) {
+    throw betterAuthError(error, "profile:getCurrentSession");
+  }
+});
 
-export async function listSessionsPublic() {
-  return handleAction<PublicSession[]>(async () => {
-    await requireSession();
-    try {
-      const sessions = await auth.api.listSessions({
-        headers: await headers(),
-      });
-      return sessions.map((s) => toPublicSession(s));
-    } catch (error) {
-      throw mapApiError(error, "listSessionsPublic");
-    }
-  });
-}
+const RevokeSessionInputSchema = z.object({
+  sessionId: z.string().min(1, { message: "Invalid session id" }),
+});
 
-export async function getCurrentSession() {
-  return handleAction<AuthenticatedContext | null>(async () => {
-    try {
-      const result = await auth.api.getSession({ headers: await headers() });
-      if (!result?.session || !result.user) return null;
-      return {
-        session: toPublicSession(result.session),
-        user: toPublicUser(result.user),
-      };
-    } catch (error) {
-      throw mapApiError(error, "getCurrentSession");
+export const revokeSessionById = protectedAction({
+  name: "profile.revokeSessionById",
+  input: RevokeSessionInputSchema,
+}).action(async ({ input }) => {
+  try {
+    const sessions = await auth.api.listSessions({
+      headers: await headers(),
+    });
+    const target = sessions.find((s) => s.id === input.sessionId);
+    if (!target) {
+      throw new NotFoundError("Session not found");
     }
-  });
-}
-
-export async function revokeSessionById(sessionId: string) {
-  return handleAction(async () => {
-    await requireSession();
-    if (!sessionId || typeof sessionId !== "string") {
-      throw new AppError("Invalid session id", 400);
-    }
-    try {
-      const sessions = await auth.api.listSessions({
-        headers: await headers(),
-      });
-      const target = sessions.find((s) => s.id === sessionId);
-      if (!target) {
-        throw new AppError("Session not found", 404);
-      }
-      return await auth.api.revokeSession({
-        headers: await headers(),
-        body: { token: target.token },
-      });
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw mapApiError(error, "revokeSessionById");
-    }
-  });
-}
+    return await auth.api.revokeSession({
+      headers: await headers(),
+      body: { token: target.token },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "profile:revokeSessionById");
+  }
+});

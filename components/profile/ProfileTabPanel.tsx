@@ -4,9 +4,8 @@ import { updateProfile } from "@/actions/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { getErrorMessage } from "@/lib/handleErrors/error";
+import { getErrorMessage, getInitials } from "@/lib/utils";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import { getInitials } from "@/lib/utils";
 import type { PublicUser } from "@/lib/auth-helpers";
 import type { SessionQueryData } from "@/hooks/session";
 import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
@@ -24,7 +23,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
       const result = await updateProfile({ name: nextName });
 
       if (!result.success) {
-        throw new Error(result.message || "Failed to update your profile.");
+        throw new Error(result.error.message || "Failed to update your profile.");
       }
 
       return nextName;
@@ -37,7 +36,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
 
       queryClient.setQueryData<SessionQueryData>(
         sessionQueryKey,
-        (currentSession) => {
+        (currentSession: SessionQueryData | undefined) => {
           if (
             !currentSession?.success ||
             !currentSession.data?.session ||

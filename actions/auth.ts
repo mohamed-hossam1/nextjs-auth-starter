@@ -2,14 +2,17 @@
 
 import { headers } from "next/headers";
 import { isAPIError } from "better-auth/api";
+import { betterAuthError } from "@/lib/actionHandler/better-auth-error";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { ROUTES } from "@/constants/routes";
+import { db } from "@/db";
+import { user as userTable } from "@/db/schema/auth-schema";
 import { auth } from "@/lib/auth";
-import { handleAction } from "@/lib/handleErrors/action-handler";
-import { AppError } from "@/lib/handleErrors/error";
-import { isValidateEmail } from "@/lib/handleErrors/email-validation";
-import { zodValidate } from "@/lib/handleErrors/zod-validate";
+import { publicAction } from "@/lib/actionHandler/builders/public-action";
+import { BadRequestError } from "@/lib/actionHandler/errors";
+import { isValidateEmail } from "@/lib/email-validation";
 import {
   ForgotPasswordSchema,
   LoginSchema,
@@ -18,156 +21,147 @@ import {
 } from "@/lib/schema/auth-schema";
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
-const GENERIC_RESET_RESPONSE = {
-  message:
-    "If an account exists for this email, a password reset link has been sent.",
-};
 
-type ApiErrorLike = {
-  message?: string;
-  statusCode?: number;
-  status?: string;
-};
-
-function mapAuthError(
-  error: unknown,
-  context: string,
-  options: { enumerationSafe: boolean },
-): AppError {
-  if (isAPIError(error)) {
-    const apiError = error as unknown as ApiErrorLike;
-    const status = apiError.statusCode ?? 400;
-    if (options.enumerationSafe) {
-      console.warn(`[auth:${context}]`, apiError.message ?? apiError.status);
-      return new AppError(GENERIC_AUTH_ERROR, status >= 500 ? 500 : 400);
-    }
-    return new AppError(apiError.message ?? GENERIC_AUTH_ERROR, status);
+export const register = publicAction({
+  name: "auth.register",
+  input: RegisterSchema,
+}).action(async ({ input }) => {
+  const emailError = await isValidateEmail(input.email);
+  if (emailError) {
+    throw new BadRequestError(emailError);
   }
-  console.error(`[auth:${context}] internal error:`, error);
-  return new AppError("Something went wrong", 500);
-}
 
-export async function register(formData: z.infer<typeof RegisterSchema>) {
-  return handleAction(async () => {
-    const validated = zodValidate(RegisterSchema, formData);
-    const emailError = await isValidateEmail(validated.email);
-    if (emailError) {
-      throw new AppError(emailError, 400);
-    }
-
-    try {
-      return await auth.api.signUpEmail({
-        headers: await headers(),
-        body: {
-          name: validated.name,
-          email: validated.email,
-          password: validated.password,
-          callbackURL: ROUTES.ADMIN,
-        },
-      });
-    } catch (error) {
-      if (isAPIError(error)) {
-        const apiError = error as unknown as ApiErrorLike;
-        const message = apiError.message ?? "";
-        if (apiError.statusCode === 422 || /already/i.test(message)) {
-          throw new AppError(
-            "We couldn't create that account. Please try again or sign in.",
-            400,
-          );
-        }
-      }
-      throw mapAuthError(error, "register", { enumerationSafe: true });
-    }
+  // Better-auth's `signUpEmail` with `requireEmailVerification: true`
+  // intentionally returns a synthetic success when the email already exists
+  // (anti-enumeration). We pre-check the user table so we can surface a
+  // clear "already exists" message. This trades the anti-enumeration
+  // property for UX clarity.
+  const existing = await db.query.user.findFirst({
+    where: eq(userTable.email, input.email),
+    columns: { id: true },
   });
-}
+  if (existing) {
+    throw new BadRequestError(
+      "An account with this email already exists. Please sign in instead.",
+    );
+  }
 
-export async function login(formData: z.infer<typeof LoginSchema>) {
-  return handleAction(async () => {
-    const validated = zodValidate(LoginSchema, formData);
-    try {
-      return await auth.api.signInEmail({
-        headers: await headers(),
-        body: {
-          email: validated.email,
-          password: validated.password,
-          callbackURL: ROUTES.ADMIN,
-        },
-      });
-    } catch (error) {
-      throw mapAuthError(error, "login", { enumerationSafe: true });
-    }
-  });
-}
-
-export async function signInWithGoogle() {
-  return handleAction(async () => {
-    try {
-      return await auth.api.signInSocial({
-        headers: await headers(),
-        body: {
-          provider: "google",
-          callbackURL: ROUTES.ADMIN,
-        },
-      });
-    } catch (error) {
-      throw mapAuthError(error, "google", { enumerationSafe: true });
-    }
-  });
-}
-
-export async function forgotPassword(
-  formData: z.infer<typeof ForgotPasswordSchema>,
-) {
-  return handleAction(async () => {
-    const validated = zodValidate(ForgotPasswordSchema, formData);
-    try {
-      await auth.api.requestPasswordReset({
-        body: {
-          email: validated.email,
-          redirectTo: `${ROUTES.RESETPASSWORD}?type=forgot`,
-        },
-      });
-    } catch (error) {
-      if (isAPIError(error)) {
-        console.warn(
-          "[auth:forgotPassword] suppressed:",
-          (error as unknown as ApiErrorLike).message,
+  try {
+    return await auth.api.signUpEmail({
+      headers: await headers(),
+      body: {
+        name: input.name,
+        email: input.email,
+        password: input.password,
+        callbackURL: ROUTES.ADMIN,
+      },
+    });
+  } catch (error) {
+    if (isAPIError(error)) {
+      const apiErr = error as unknown as { message?: string; statusCode?: number };
+      const message = apiErr.message ?? "";
+      if (apiErr.statusCode === 422 || /already/i.test(message)) {
+        throw new BadRequestError(
+          "An account with this email already exists. Please sign in instead.",
+          error,
         );
-      } else {
-        console.error("[auth:forgotPassword] internal error:", error);
       }
     }
-    return GENERIC_RESET_RESPONSE;
-  });
-}
+    throw betterAuthError(error, "auth:register", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+  }
+});
 
-export async function resetPassword(
-  formData: z.infer<typeof ResetPasswordSchema> & { token: string },
-) {
-  return handleAction(async () => {
-    const validated = zodValidate(ResetPasswordSchema, formData);
-    if (!formData.token || typeof formData.token !== "string") {
-      throw new AppError("Invalid or expired reset link.", 400);
-    }
-    try {
-      return await auth.api.resetPassword({
-        body: {
-          newPassword: validated.password,
-          token: formData.token,
-        },
-      });
-    } catch (error) {
-      throw mapAuthError(error, "resetPassword", { enumerationSafe: false });
-    }
-  });
-}
+export const login = publicAction({
+  name: "auth.login",
+  input: LoginSchema,
+}).action(async ({ input }) => {
+  try {
+    return await auth.api.signInEmail({
+      headers: await headers(),
+      body: {
+        email: input.email,
+        password: input.password,
+        callbackURL: ROUTES.ADMIN,
+      },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "auth:login", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+  }
+});
 
-export async function signOut() {
-  return handleAction(async () => {
-    try {
-      return await auth.api.signOut({ headers: await headers() });
-    } catch (error) {
-      throw mapAuthError(error, "signOut", { enumerationSafe: false });
+export const signInWithGoogle = publicAction({
+  name: "auth.signInWithGoogle",
+}).action(async () => {
+  try {
+    return await auth.api.signInSocial({
+      headers: await headers(),
+      body: {
+        provider: "google",
+        callbackURL: ROUTES.ADMIN,
+      },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "auth:google", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+  }
+});
+
+const GENERIC_RESET_RESPONSE = z.object({ message: z.string() });
+
+export const forgotPassword = publicAction({
+  name: "auth.forgotPassword",
+  input: ForgotPasswordSchema,
+  output: GENERIC_RESET_RESPONSE,
+}).action(async ({ input }) => {
+  try {
+    await auth.api.requestPasswordReset({
+      body: {
+        email: input.email,
+        redirectTo: `${ROUTES.RESETPASSWORD}?type=forgot`,
+      },
+    });
+  } catch (error) {
+    if (isAPIError(error)) {
+      console.warn(
+        "[auth:forgotPassword] suppressed:",
+        (error as unknown as { message?: string }).message,
+      );
+    } else {
+      console.error("[auth:forgotPassword] internal error:", error);
     }
-  });
-}
+  }
+
+  return {
+    message:
+      "If an account exists for this email, a password reset link has been sent.",
+  };
+});
+
+const ResetPasswordInputSchema = ResetPasswordSchema.extend({
+  token: z.string().min(1, { message: "Invalid or expired reset link." }),
+});
+
+export const resetPassword = publicAction({
+  name: "auth.resetPassword",
+  input: ResetPasswordInputSchema,
+}).action(async ({ input }) => {
+  try {
+    return await auth.api.resetPassword({
+      body: {
+        newPassword: input.password,
+        token: input.token,
+      },
+    });
+  } catch (error) {
+    throw betterAuthError(error, "auth:resetPassword");
+  }
+});
+
+export const signOut = publicAction({
+  name: "auth.signOut",
+}).action(async () => {
+  try {
+    return await auth.api.signOut({ headers: await headers() });
+  } catch (error) {
+    throw betterAuthError(error, "auth:signOut");
+  }
+});

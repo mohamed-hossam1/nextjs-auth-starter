@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import type { PublicUser } from "@/lib/auth-helpers";
-import { getErrorMessage } from "@/lib/handleErrors/error";
+import { getErrorMessage } from "@/lib/utils";
 import { accountHasPasswordQueryKey } from "@/lib/reactQuery/query-keys";
 
 export function SecurityTabPanel({
@@ -38,7 +38,7 @@ export function SecurityTabPanel({
       const result = await hasPassword();
       if (!result.success) {
         throw new Error(
-          result.message || "Failed to load your security settings.",
+          result.error.message || "Failed to load your security settings.",
         );
       }
       return Boolean(result.data);
@@ -52,7 +52,7 @@ export function SecurityTabPanel({
     }) => {
       const result = await changePassword(formData);
       if (!result.success) {
-        throw new Error(result.message || "Failed to change your password.");
+        throw new Error(result.error.message || "Failed to change your password.");
       }
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export function SecurityTabPanel({
       const result = await sendCurrentUserPasswordResetEmail();
       if (!result.success) {
         throw new Error(
-          result.message || "Failed to send the password reset email.",
+          result.error.message || "Failed to send the password reset email.",
         );
       }
     },

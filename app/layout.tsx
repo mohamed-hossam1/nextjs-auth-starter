@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, DM_Serif_Text, IBM_Plex_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import {
+  DM_Serif_Display,
+  DM_Serif_Text,
+  IBM_Plex_Mono,
+} from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 
 import { ThemeProvider } from "@/providers/theme-provider";
-import { StateProvider } from "@/providers/state-provider";
 import QueryProvider from "@/providers/query-provider";
 import { publicEnv } from "@/lib/env";
 
@@ -49,17 +52,15 @@ export default function RootLayout({
     >
       <body>
         <QueryProvider>
-          <StateProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
-          </StateProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

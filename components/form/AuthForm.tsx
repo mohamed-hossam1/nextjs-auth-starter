@@ -71,7 +71,7 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
       : register(data as z.infer<typeof RegisterSchema>));
 
     if (!result.success) {
-      toast.error(result.message, { position: "top-center" });
+      toast.error(result.error.message, { position: "top-center" });
       return;
     }
     toast.success(
@@ -100,7 +100,7 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
     try {
       const result = await signInWithGoogle();
       if (!result.success) {
-        toast.error(result.message, { position: "top-center" });
+        toast.error(result.error.message, { position: "top-center" });
         return;
       }
       const url = result.data?.url;

@@ -6,7 +6,7 @@ import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { SessionActionsSkeleton } from "@/components/skeletons/SessionActionsSkeleton";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
-import { getErrorMessage } from "@/lib/handleErrors/error";
+import { getErrorMessage } from "@/lib/utils";
 import { accountQueryKey, sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ export default function SessionActions() {
       const result = await signOut();
 
       if (!result.success) {
-        throw new Error(result.message || "Failed to sign out.");
+        throw new Error(result.error.message || "Failed to sign out.");
       }
     },
     onSuccess: () => {

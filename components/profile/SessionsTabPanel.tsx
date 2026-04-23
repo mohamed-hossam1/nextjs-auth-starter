@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { listSessionsPublic, revokeSessionById } from "@/actions/profile";
 import SessionCard from "@/components/profile/SessionCard";
 import { TabsContent } from "@/components/ui/tabs";
-import { getErrorMessage } from "@/lib/handleErrors/error";
+import { getErrorMessage } from "@/lib/utils";
 import type { PublicSession } from "@/lib/auth-helpers";
 import { accountSessionsQueryKey } from "@/lib/reactQuery/query-keys";
 
@@ -29,7 +29,7 @@ export function SessionsTabPanel({
     queryFn: async (): Promise<PublicSession[]> => {
       const result = await listSessionsPublic();
       if (!result.success) {
-        throw new Error(result.message || "Failed to load active sessions.");
+        throw new Error(result.error.message || "Failed to load active sessions.");
       }
       return result.data;
     },
@@ -37,9 +37,9 @@ export function SessionsTabPanel({
 
   const revokeSessionMutation = useMutation({
     mutationFn: async ({ sessionId }: { sessionId: string }) => {
-      const result = await revokeSessionById(sessionId);
+      const result = await revokeSessionById({ sessionId });
       if (!result.success) {
-        throw new Error(result.message || "Failed to revoke the session.");
+        throw new Error(result.error.message || "Failed to revoke the session.");
       }
       return { sessionId };
     },

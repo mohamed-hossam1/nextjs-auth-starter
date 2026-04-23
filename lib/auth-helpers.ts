@@ -1,9 +1,8 @@
 import "server-only";
 
-import { headers } from "next/headers";
-
-import { auth } from "@/lib/auth";
-import { AppError } from "@/lib/handleErrors/error";
+import type { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/actionHandler/auth";
+import { UnauthorizedError } from "@/lib/actionHandler/errors";
 
 export type PublicSession = {
   id: string;
@@ -61,20 +60,20 @@ export function toPublicUser(user: RawUser): PublicUser {
 }
 
 export async function getSession(): Promise<AuthenticatedContext | null> {
-  const result = await auth.api.getSession({ headers: await headers() });
-  if (!result?.session || !result.user) {
+  const session = await getAuthSession();
+  if (!session) {
     return null;
   }
   return {
-    session: toPublicSession(result.session),
-    user: toPublicUser(result.user),
+    session: toPublicSession(session.session),
+    user: toPublicUser(session.user),
   };
 }
 
 export async function requireSession(): Promise<AuthenticatedContext> {
   const ctx = await getSession();
   if (!ctx) {
-    throw new AppError("Unauthorized", 401);
+    throw new UnauthorizedError();
   }
   return ctx;
 }
