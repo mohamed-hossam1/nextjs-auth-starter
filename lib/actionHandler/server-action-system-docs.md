@@ -1,824 +1,194 @@
-# Production Server Actions System Documentation
+# Server Action System
 
-## Overview
+A thin wrapper around Next.js Server Actions that gives every action:
 
-This system provides a production-grade architecture for Next.js Server Actions with:
-
-- Typed responses
-- Structured errors
-- Zod validation
-- Better Auth integration
-- Middleware support
-- Output sanitization
-- Structured logging
-- Drizzle-ready error handling
-- Role-based access control
-- Production-safe error exposure
+- ✅ Automatic input validation via Zod
+- ✅ Structured success / error responses (no more `try/catch` in every action)
+- ✅ Auth checks built-in (`protectedAction`, `adminAction`)
+- ✅ Automatic logging with timing per action
 
 ---
 
-# Folder Structure
+## File Structure
 
-```txt
-src/lib/actions/
-
-errors.ts
-types.ts
-auth.ts
-logger.ts
-validation.ts
-error-handler.ts
-create-action.ts
-
-builders/
-  public-action.ts
-  protected-action.ts
-  admin-action.ts
-
-middlewares/
-  auth-middleware.ts
-  role-middleware.ts
-
-utils/
-  create-validation-error.ts
-  sanitize-output.ts
-
-schemas/
-  action-error-schema.ts
-  validation-error-schema.ts
+```
+lib/actionHandler/
+  ├── create-action.ts   ← Everything: validation, error handling, logging, builders
+  ├── errors.ts          ← All error classes (ValidationError, NotFoundError, …)
+  ├── types.ts           ← TypeScript types used across the system
+  ├── auth.ts            ← Session helpers (requireUser, getCurrentUser, …)
+  ├── better-auth-error.ts ← Helper for better-auth API errors specifically
+  └── logger.ts          ← Console logging with timestamps
 ```
 
 ---
 
-# Core Concepts
+## Quick Start
 
-## Public Action
-
-Accessible without authentication.
-
-Example:
-
-- newsletter subscription
-- contact form
-- login
-- register
-
----
-
-## Protected Action
-
-Requires authenticated user.
-
-Example:
-
-- create post
-- update profile
-- create comment
-
----
-
-## Admin Action
-
-Requires ADMIN role.
-
-Example:
-
-- delete users
-- moderation
-- analytics dashboard
-
----
-
-# Response Format
-
-Every action returns a standardized shape.
-
-## Success Response
-
-```ts
-{
-  success: true,
-  data: {
-    ...
-  }
-}
-```
-
----
-
-## Error Response
-
-```ts
-{
-  success: false,
-  error: {
-    code: "VALIDATION_ERROR",
-    message: "Invalid input"
-  }
-}
-```
-
----
-
-# Error Codes
-
----
-
-## BAD_REQUEST
-
-Request logic is invalid.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "BAD_REQUEST",
-    message: "Post is already archived"
-  }
-}
-```
-
----
-
-## VALIDATION_ERROR
-
-Input validation failed.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "VALIDATION_ERROR",
-    message: "Invalid input",
-    fields: {
-      email: ["Invalid email"]
-    }
-  }
-}
-```
-
----
-
-## UNAUTHORIZED
-
-User is not authenticated.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "UNAUTHORIZED",
-    message: "Unauthorized"
-  }
-}
-```
-
----
-
-## FORBIDDEN
-
-User is authenticated but lacks permissions.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "FORBIDDEN",
-    message: "You do not have permission to perform this action"
-  }
-}
-```
-
----
-
-## NOT_FOUND
-
-Requested resource does not exist.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "NOT_FOUND",
-    message: "Post not found"
-  }
-}
-```
-
----
-
-## RATE_LIMITED
-
-Too many requests.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "RATE_LIMITED",
-    message: "Too many requests. Please try again later."
-  }
-}
-```
-
----
-
-## DATABASE_ERROR
-
-Database/internal failure.
-
-Public message is sanitized.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "DATABASE_ERROR",
-    message: "Database operation failed"
-  }
-}
-```
-
----
-
-## INTERNAL_SERVER_ERROR
-
-Unexpected server failure.
-
-Example:
-
-```ts
-{
-  success: false,
-  error: {
-    code: "INTERNAL_SERVER_ERROR",
-    message: "Something went wrong"
-  }
-}
-```
-
-# Database Setup
-
-## Example Drizzle Schema
-
-```ts
-// src/db/schema/posts.ts
-
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-
-export const posts = pgTable("posts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-
-  title: text("title").notNull(),
-
-  content: text("content").notNull(),
-
-  authorId: text("author_id").notNull(),
-
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-```
-
----
-
-# CREATE Example
-
-## Server Action
+Every action must live in a `"use server"` file and follow this pattern:
 
 ```ts
 "use server";
 
+import { protectedAction } from "@/lib/actionHandler/create-action";
 import { z } from "zod";
 
-import { db } from "@/db";
-
-import { posts } from "@/db/schema/posts";
-
-import { protectedAction } from "@/lib/actions/builders/protected-action";
-
-const input = z.object({
-  title: z.string().min(3),
-
-  content: z.string().min(10),
-});
-
-const output = z.object({
-  id: z.string(),
-
-  title: z.string(),
-
-  content: z.string(),
-
-  authorId: z.string(),
-});
-
 export const createPost = protectedAction({
-  name: "create-post",
-
-  input,
-
-  output,
+  name: "posts.create",                  // used in logs
+  input: z.object({ title: z.string() }),
 }).action(async ({ input, ctx }) => {
-  const [post] = await db
-    .insert(posts)
-    .values({
-      title: input.title,
+  // input is fully typed from your Zod schema
+  // ctx.user is guaranteed non-null here (protectedAction)
+  return await db.insert(posts).values({ title: input.title, userId: ctx.user.id });
+});
+```
 
-      content: input.content,
+The returned function always has this shape — no matter what:
 
-      authorId: ctx.user!.id,
-    })
-    .returning();
+```ts
+// ✅ Success
+{ success: true, data: <your return value> }
+
+// ❌ Failure (validation, auth, db error, …)
+{ success: false, error: { code: "VALIDATION_ERROR", message: "…", fields?: { … } } }
+```
+
+---
+
+## The Three Builders
+
+Pick the right builder based on who can call the action:
+
+| Builder | Who can call it | `ctx.user` inside handler |
+|---|---|---|
+| `publicAction` | Anyone (no login needed) | `null` |
+| `protectedAction` | Logged-in users only | `AuthUser` (never null) |
+| `adminAction` | Admins only (`role === "ADMIN"`) | `AuthUser` (never null) |
+
+```ts
+import { publicAction, protectedAction, adminAction } from "@/lib/actionHandler/create-action";
+```
+
+---
+
+## Options
+
+All three builders accept the same options:
+
+```ts
+{
+  name: string;          // Required. Shows up in server logs.
+  input?: z.ZodSchema;  // Optional. If provided, input is validated automatically.
+  output?: z.ZodSchema; // Optional. If provided, output is validated before returning.
+  middlewares?: [...];  // Optional. Custom async checks that run before your handler.
+}
+```
+
+---
+
+## Handling Errors in Your Action
+
+Throw any error from `errors.ts` — the system catches it and converts it to a structured failure automatically.
+
+```ts
+import { NotFoundError, BadRequestError, ValidationError } from "@/lib/actionHandler/errors";
+
+export const getPost = protectedAction({
+  name: "posts.get",
+  input: z.object({ id: z.string() }),
+}).action(async ({ input }) => {
+  const post = await db.query.posts.findFirst({ where: eq(posts.id, input.id) });
+
+  if (!post) throw new NotFoundError("Post not found");
 
   return post;
 });
 ```
 
+### Available Errors
+
+| Error class | `code` sent to client | Exposed to client? |
+|---|---|---|
+| `BadRequestError` | `BAD_REQUEST` | ✅ Yes |
+| `ValidationError` | `VALIDATION_ERROR` | ✅ Yes (+ `fields`) |
+| `UnauthorizedError` | `UNAUTHORIZED` | ✅ Yes |
+| `ForbiddenError` | `FORBIDDEN` | ✅ Yes |
+| `NotFoundError` | `NOT_FOUND` | ✅ Yes |
+| `RateLimitError` | `RATE_LIMITED` | ✅ Yes |
+| `DatabaseError` | `DATABASE_ERROR` | ❌ Hidden ("Something went wrong") |
+| `InternalServerError` | `INTERNAL_SERVER_ERROR` | ❌ Hidden ("Something went wrong") |
+
+> **Drizzle errors are handled automatically.** PostgreSQL codes like `23505` (duplicate), `23503` (bad reference), `23502` (null violation) are caught and converted to a `ValidationError` without any extra code on your part.
+
 ---
 
-## Frontend Usage
+## Reading the Result on the Client
 
-```tsx
+```ts
 "use client";
 
-import { createPost } from "@/actions/posts/create-post";
+import { createPost } from "@/actions/posts";
 
-async function handleSubmit() {
-  const result = await createPost({
-    title: "Redis Guide",
-
-    content: "Production caching guide",
-  });
+async function handleSubmit(formData: FormData) {
+  const result = await createPost({ title: formData.get("title") as string });
 
   if (!result.success) {
-    console.log(result.error);
-
+    // result.error.code  → e.g. "VALIDATION_ERROR"
+    // result.error.message → human-readable message
+    // result.error.fields  → { title: ["Too short"] } (only for validation errors)
+    console.error(result.error.message);
     return;
   }
 
-  console.log(result.data);
+  // result.data → your return value, fully typed
+  console.log("Created:", result.data);
 }
 ```
 
 ---
 
-## Possible Errors
+## Adding Custom Middleware
 
-### Validation Error
-
-```ts
-{
-  success: false,
-  error: {
-    code: "VALIDATION_ERROR",
-    message: "Invalid input",
-    fields: {
-      title: [
-        "String must contain at least 3 character(s)"
-      ]
-    }
-  }
-}
-```
-
----
-
-### Unauthorized Error
+Middlewares run **after** the auth check but **before** your handler. Use them for extra checks that multiple actions share.
 
 ```ts
-{
-  success: false,
-  error: {
-    code: "UNAUTHORIZED",
-    message: "Unauthorized"
-  }
-}
-```
+import { protectedAction } from "@/lib/actionHandler/create-action";
+import { ForbiddenError } from "@/lib/actionHandler/errors";
 
----
-
-# READ Example
-
-## Get Single Post
-
-```ts
-"use server";
-
-import { z } from "zod";
-
-import { eq } from "drizzle-orm";
-
-import { db } from "@/db";
-
-import { posts } from "@/db/schema/posts";
-
-import { publicAction } from "@/lib/actions/builders/public-action";
-
-import { NotFoundError } from "@/lib/actions/errors";
-
-const input = z.object({
-  postId: z.string(),
-});
-
-const output = z.object({
-  id: z.string(),
-
-  title: z.string(),
-
-  content: z.string(),
-
-  authorId: z.string(),
-});
-
-export const getPost = publicAction({
-  name: "get-post",
-
-  input,
-
-  output,
-}).action(async ({ input }) => {
-  const post = await db.query.posts.findFirst({
-    where: eq(posts.id, input.postId),
-  });
-
-  if (!post) {
-    throw new NotFoundError("Post not found");
-  }
-
-  return post;
-});
-```
-
----
-
-## Frontend Usage
-
-```tsx
-const result = await getPost({
-  postId: "123",
-});
-
-if (!result.success) {
-  if (result.error.code === "NOT_FOUND") {
-    console.log("Post not found");
-  }
-
-  return;
-}
-
-console.log(result.data);
-```
-
----
-
-# UPDATE Example
-
-```ts
-"use server";
-
-import { z } from "zod";
-
-import { and, eq } from "drizzle-orm";
-
-import { db } from "@/db";
-
-import { posts } from "@/db/schema/posts";
-
-import { protectedAction } from "@/lib/actions/builders/protected-action";
-
-import { NotFoundError } from "@/lib/actions/errors";
-
-const input = z.object({
-  postId: z.string(),
-
-  title: z.string().min(3),
-
-  content: z.string().min(10),
-});
-
-export const updatePost = protectedAction({
-  name: "update-post",
-
-  input,
-}).action(async ({ input, ctx }) => {
-  const [post] = await db
-    .update(posts)
-    .set({
-      title: input.title,
-
-      content: input.content,
-    })
-    .where(
-      and(
-        eq(posts.id, input.postId),
-
-        eq(posts.authorId, ctx.user!.id),
-      ),
-    )
-    .returning();
-
-  if (!post) {
-    throw new NotFoundError("Post not found");
-  }
-
-  return post;
-});
-```
-
----
-
-# DELETE Example
-
-```ts
-"use server";
-
-import { z } from "zod";
-
-import { and, eq } from "drizzle-orm";
-
-import { db } from "@/db";
-
-import { posts } from "@/db/schema/posts";
-
-import { protectedAction } from "@/lib/actions/builders/protected-action";
-
-import { NotFoundError } from "@/lib/actions/errors";
-
-const input = z.object({
-  postId: z.string(),
-});
+// Example: only allow the owner of a resource to modify it
+const ownerOnly = async ({ input, ctx }) => {
+  const resource = await db.query.posts.findFirst({ where: eq(posts.id, input.id) });
+  if (resource?.userId !== ctx.user?.id) throw new ForbiddenError();
+};
 
 export const deletePost = protectedAction({
-  name: "delete-post",
-
-  input,
-}).action(async ({ input, ctx }) => {
-  const [post] = await db
-    .delete(posts)
-    .where(
-      and(
-        eq(posts.id, input.postId),
-
-        eq(posts.authorId, ctx.user!.id),
-      ),
-    )
-    .returning();
-
-  if (!post) {
-    throw new NotFoundError("Post not found");
-  }
-
-  return {
-    deleted: true,
-  };
-});
-```
-
----
-
-# Admin Action Example
-
-```ts
-"use server";
-
-import { z } from "zod";
-
-import { eq } from "drizzle-orm";
-
-import { db } from "@/db";
-
-import { users } from "@/db/schema/users";
-
-import { adminAction } from "@/lib/actions/builders/admin-action";
-
-const input = z.object({
-  userId: z.string(),
-});
-
-export const banUser = adminAction({
-  name: "ban-user",
-
-  input,
+  name: "posts.delete",
+  input: z.object({ id: z.string() }),
+  middlewares: [ownerOnly],
 }).action(async ({ input }) => {
-  const [user] = await db
-    .update(users)
-    .set({
-      banned: true,
-    })
-    .where(eq(users.id, input.userId))
-    .returning();
-
-  return user;
+  await db.delete(posts).where(eq(posts.id, input.id));
 });
 ```
 
 ---
 
-# Middleware Example
+## Using with better-auth API calls
 
-## Audit Middleware
-
-```ts
-// src/lib/actions/middlewares/audit.ts
-
-import type { ActionMiddleware } from "@/lib/actions/types";
-
-export const auditMiddleware: ActionMiddleware = async ({ ctx }) => {
-  console.log("AUDIT:", ctx.user?.id);
-};
-```
-
----
-
-## Usage
+For actions that call `auth.api.*`, use `betterAuthError` to normalize better-auth's own errors into the same structured format:
 
 ```ts
-protectedAction({
-  name: "update-profile",
+import { betterAuthError } from "@/lib/actionHandler/better-auth-error";
 
-  middlewares: [auditMiddleware],
+export const updateProfile = protectedAction({
+  name: "profile.updateProfile",
+  input: z.object({ name: z.string() }),
+}).action(async ({ input }) => {
+  try {
+    return await auth.api.updateUser({ headers: await headers(), body: { name: input.name } });
+  } catch (error) {
+    throw betterAuthError(error, "profile:updateProfile");
+  }
 });
 ```
 
----
-
-# Output Sanitization
-
-## Why It Matters
-
-Never return raw database objects directly.
-
-Bad:
-
-```ts
-return user;
-```
-
-Potentially leaks:
-
-- password
-- hashedPassword
-- secretKey
-- internalFlags
-- adminNotes
-
----
-
-## Correct Approach
-
-```ts
-const output = z.object({
-  id: z.string(),
-  email: z.string(),
-});
-```
-
-Only public-safe fields are returned.
-
----
-
-# Best Practices
-
-## Keep Business Logic Inside Actions
-
-Good:
-
-```ts
-return db.insert(...)
-```
-
-Bad:
-
-```ts
-try {
-} catch {}
-```
-
-The framework already handles:
-
-- errors
-- validation
-- auth
-- logging
-- response formatting
-
----
-
-# Never Do This
-
-```ts
-return dbUser;
-```
-
-Without output validation.
-
----
-
-# Never Throw Generic Errors
-
-Bad:
-
-```ts
-throw new Error("failed");
-```
-
-Good:
-
-```ts
-throw new NotFoundError();
-```
-
----
-
-# Recommended Action Structure
-
-```ts
-"use server"
-
-import { z } from "zod"
-
-import {
-  protectedAction,
-} from "@/lib/actions/builders/protected-action"
-
-const input = z.object({
-  ...
-})
-
-const output = z.object({
-  ...
-})
-
-export const myAction =
-  protectedAction({
-    name: "my-action",
-
-    input,
-
-    output,
-  }).action(async ({
-    input,
-    ctx,
-  }) => {
-
-    return ...
-  })
-```
-
----
-
-# Mental Model
-
-```txt
-Request
-   ↓
-Validate Input
-   ↓
-Inject Context
-   ↓
-Run Middlewares
-   ↓
-Execute Business Logic
-   ↓
-Sanitize Output
-   ↓
-Normalize Errors
-   ↓
-Return Typed Response
-```
-
----
-
-# Final Notes
-
-This architecture is designed to:
-
-- scale cleanly
-- reduce boilerplate
-- improve consistency
-- improve debugging
-- provide predictable behavior
-- prevent accidental security leaks
-- centralize infrastructure concerns
-
-while keeping:
-
-- business logic simple
-- actions readable
-- abstractions lightweight
-- debugging easy
-- control explicit
+The second argument (`"profile:updateProfile"`) is just a label for the server log.

@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { betterAuthError } from "@/lib/actionHandler/better-auth-error";
+import { logWarn } from "@/lib/actionHandler/logger";
 import { z } from "zod";
 
 import { ROUTES } from "@/constants/routes";
@@ -13,8 +14,7 @@ import {
   requireSession,
   toPublicSession,
 } from "@/lib/auth-helpers";
-import { protectedAction } from "@/lib/actionHandler/builders/protected-action";
-import { publicAction } from "@/lib/actionHandler/builders/public-action";
+import { protectedAction, publicAction } from "@/lib/actionHandler/create-action";
 import { NotFoundError } from "@/lib/actionHandler/errors";
 import {
   ChangePasswordSchema,
@@ -62,10 +62,7 @@ export const sendCurrentUserPasswordResetEmail = protectedAction({
       },
     });
   } catch (error) {
-    console.warn(
-      "[profile:sendCurrentUserPasswordResetEmail] suppressed:",
-      (error as { message?: string }).message,
-    );
+    logWarn({ action: "profile.sendCurrentUserPasswordResetEmail", message: "suppressed API error", meta: { error } });
   }
 
   return { message: "If your account is valid, a reset email was sent." };

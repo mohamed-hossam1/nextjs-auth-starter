@@ -1,3 +1,5 @@
+import { ActionError } from "./errors";
+
 type LogLevel = "info" | "warn" | "error";
 
 type LogMeta = Record<string, unknown>;
@@ -90,7 +92,7 @@ export async function withTiming<T>({
       meta: {
         duration,
         error:
-          error instanceof Error
+          error instanceof ActionError
             ? {
                 name: error.name,
                 message: error.message,

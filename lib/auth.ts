@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 
 import { db } from "@/db";
+import { logError } from "@/lib/actionHandler/logger";
 import { sendEmailVerificationEmail } from "./emails/verification-email";
 import { sendPasswordResetEmail } from "./emails/password-reset-email";
 import { sendWelcomeEmail } from "./emails/send_welcome_email";
@@ -17,7 +18,7 @@ async function bestEffortEmail(
   try {
     await send();
   } catch (error) {
-    console.error(`[email:${label}] send failed (best-effort):`, error);
+    logError({ action: `email.${label}`, message: "send failed (best-effort)", meta: { error } });
   }
 }
 

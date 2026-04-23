@@ -1,6 +1,7 @@
 import { isAPIError } from "better-auth/api";
 
 import { ActionError, BadRequestError, InternalServerError } from "./errors";
+import { logError, logWarn } from "./logger";
 
 type ApiErrorLike = { message?: string; statusCode?: number; status?: string };
 
@@ -19,7 +20,7 @@ export function betterAuthError(
     const status = apiError.statusCode ?? 400;
 
     if (enumerationSafe) {
-      console.warn(`[${context}]`, apiError.message ?? apiError.status);
+      logWarn({ action: context, message: apiError.message ?? apiError.status ?? "suppressed API error" });
       return status >= 500
         ? new InternalServerError(genericMessage, error)
         : new BadRequestError(genericMessage, error);
@@ -30,6 +31,6 @@ export function betterAuthError(
       : new BadRequestError(apiError.message ?? genericMessage, error);
   }
 
-  console.error(`[${context}] internal error:`, error);
+  logError({ action: context, message: "internal error", meta: { error } });
   return new InternalServerError(genericMessage, error);
 }

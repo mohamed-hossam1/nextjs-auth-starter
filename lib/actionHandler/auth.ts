@@ -10,10 +10,6 @@ type RawAuthSession = NonNullable<
   Awaited<ReturnType<typeof auth.api.getSession>>
 >;
 
-/**
- * Single source of truth for session retrieval. Returns the raw better-auth
- * session payload (`{ session, user }`) when one exists, otherwise `null`.
- */
 export async function getAuthSession(): Promise<RawAuthSession | null> {
   const session = await auth.api.getSession({
     headers: await headers(),

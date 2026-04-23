@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { isAPIError } from "better-auth/api";
 import { betterAuthError } from "@/lib/actionHandler/better-auth-error";
+import { logError, logWarn } from "@/lib/actionHandler/logger";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -10,7 +11,7 @@ import { ROUTES } from "@/constants/routes";
 import { db } from "@/db";
 import { user as userTable } from "@/db/schema/auth-schema";
 import { auth } from "@/lib/auth";
-import { publicAction } from "@/lib/actionHandler/builders/public-action";
+import { publicAction } from "@/lib/actionHandler/create-action";
 import { BadRequestError } from "@/lib/actionHandler/errors";
 import { isValidateEmail } from "@/lib/email-validation";
 import {
@@ -30,12 +31,6 @@ export const register = publicAction({
   if (emailError) {
     throw new BadRequestError(emailError);
   }
-
-  // Better-auth's `signUpEmail` with `requireEmailVerification: true`
-  // intentionally returns a synthetic success when the email already exists
-  // (anti-enumeration). We pre-check the user table so we can surface a
-  // clear "already exists" message. This trades the anti-enumeration
-  // property for UX clarity.
   const existing = await db.query.user.findFirst({
     where: eq(userTable.email, input.email),
     columns: { id: true },
@@ -58,7 +53,10 @@ export const register = publicAction({
     });
   } catch (error) {
     if (isAPIError(error)) {
-      const apiErr = error as unknown as { message?: string; statusCode?: number };
+      const apiErr = error as unknown as {
+        message?: string;
+        statusCode?: number;
+      };
       const message = apiErr.message ?? "";
       if (apiErr.statusCode === 422 || /already/i.test(message)) {
         throw new BadRequestError(
@@ -67,7 +65,10 @@ export const register = publicAction({
         );
       }
     }
-    throw betterAuthError(error, "auth:register", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+    throw betterAuthError(error, "auth:register", {
+      enumerationSafe: true,
+      genericMessage: GENERIC_AUTH_ERROR,
+    });
   }
 });
 
@@ -85,7 +86,10 @@ export const login = publicAction({
       },
     });
   } catch (error) {
-    throw betterAuthError(error, "auth:login", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+    throw betterAuthError(error, "auth:login", {
+      enumerationSafe: true,
+      genericMessage: GENERIC_AUTH_ERROR,
+    });
   }
 });
 
@@ -101,7 +105,10 @@ export const signInWithGoogle = publicAction({
       },
     });
   } catch (error) {
-    throw betterAuthError(error, "auth:google", { enumerationSafe: true, genericMessage: GENERIC_AUTH_ERROR });
+    throw betterAuthError(error, "auth:google", {
+      enumerationSafe: true,
+      genericMessage: GENERIC_AUTH_ERROR,
+    });
   }
 });
 
@@ -121,12 +128,9 @@ export const forgotPassword = publicAction({
     });
   } catch (error) {
     if (isAPIError(error)) {
-      console.warn(
-        "[auth:forgotPassword] suppressed:",
-        (error as unknown as { message?: string }).message,
-      );
+      logWarn({ action: "auth.forgotPassword", message: "suppressed API error", meta: { error } });
     } else {
-      console.error("[auth:forgotPassword] internal error:", error);
+      logError({ action: "auth.forgotPassword", message: "internal error", meta: { error } });
     }
   }
 
