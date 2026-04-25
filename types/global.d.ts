@@ -1,14 +1,8 @@
-/**
- * Re-export the canonical `ActionResult` (and friends) from the new
- * actionHandler so existing `import type { ActionResult } from "@/types/global"`
- * call sites keep working.
- */
-import type {
-  ActionFailure as _ActionFailure,
-  ActionResult as _ActionResult,
-  ActionSuccess as _ActionSuccess,
-} from "@/lib/actionHandler/types";
+import type { ErrorCode } from "@/lib/nextSafeAction/error/errors";
 
-export type ActionResult<T = void> = _ActionResult<T>;
-export type ActionSuccess<T = void> = _ActionSuccess<T>;
-export type ActionFailure = _ActionFailure;
+export type ActionServerError = {
+  code: ErrorCode;
+  message: string;
+};
+
+export type { InferSafeActionFnResult as ActionResult } from "next-safe-action";

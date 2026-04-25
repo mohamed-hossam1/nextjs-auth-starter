@@ -60,6 +60,12 @@ export function proxy(request: NextRequest) {
 
   if (authRoute && isAuthed) {
     if (searchParams.has(REAUTH_PARAM)) {
+      const fetchSite = request.headers.get("sec-fetch-site");
+      const isTrustedNavigation =
+        !fetchSite || fetchSite === "same-origin" || fetchSite === "none";
+      if (!isTrustedNavigation) {
+        return NextResponse.redirect(new URL(ROUTES.ADMIN, request.url));
+      }
       return clearSessionCookies(NextResponse.next());
     }
 

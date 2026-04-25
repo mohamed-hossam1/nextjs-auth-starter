@@ -13,6 +13,7 @@ import { ROUTES } from "@/constants/routes";
 import { ForgotPasswordSchema } from "@/lib/schema/auth-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ResendForgotPasswordButton } from "@/components/button/ResendForgotPasswordButton";
 import {
   Field,
   FieldContent,
@@ -36,8 +37,8 @@ export function ForgotPasswordForm() {
   async function handleSubmit(data: z.infer<typeof ForgotPasswordSchema>) {
     const result = await forgotPassword(data);
 
-    if (!result.success) {
-      toast.error(result.error.message, { position: "top-center" });
+    if (result?.serverError) {
+      toast.error(result.serverError.message, { position: "top-center" });
       return;
     }
 
@@ -92,12 +93,7 @@ export function ForgotPasswordForm() {
                   >
                     Try another email
                   </Button>
-                  <Link
-                    href={ROUTES.LOGIN}
-                    className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
-                  >
-                    Back to sign in
-                  </Link>
+                  <ResendForgotPasswordButton email={submittedEmail} />
                 </div>
               </div>
             </CardContent>

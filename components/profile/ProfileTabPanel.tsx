@@ -7,7 +7,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { getErrorMessage, getInitials } from "@/lib/utils";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import type { PublicUser } from "@/lib/auth-helpers";
-import type { SessionQueryData } from "@/hooks/session";
+import type { SessionPayload } from "@/hooks/session";
 import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,8 +22,8 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
     mutationFn: async (nextName: string) => {
       const result = await updateProfile({ name: nextName });
 
-      if (!result.success) {
-        throw new Error(result.error.message || "Failed to update your profile.");
+      if (result?.serverError) {
+        throw new Error(result.serverError!.message || "Failed to update your profile.");
       }
 
       return nextName;
@@ -32,29 +32,13 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
       await queryClient.cancelQueries({ queryKey: sessionQueryKey });
 
       const previousSession =
-        queryClient.getQueryData<SessionQueryData>(sessionQueryKey);
+        queryClient.getQueryData<SessionPayload | null>(sessionQueryKey);
 
-      queryClient.setQueryData<SessionQueryData>(
+      queryClient.setQueryData<SessionPayload | null>(
         sessionQueryKey,
-        (currentSession: SessionQueryData | undefined) => {
-          if (
-            !currentSession?.success ||
-            !currentSession.data?.session ||
-            !currentSession.data.user
-          ) {
-            return currentSession;
-          }
-
-          return {
-            ...currentSession,
-            data: {
-              ...currentSession.data,
-              user: {
-                ...currentSession.data.user,
-                name: nextName,
-              },
-            },
-          };
+        (current) => {
+          if (!current?.session || !current.user) return current;
+          return { ...current, user: { ...current.user, name: nextName } };
         },
       );
 

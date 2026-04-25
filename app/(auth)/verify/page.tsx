@@ -5,6 +5,8 @@ import { MailCheck } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { ResendVerificationButton } from "../../../components/button/ResendVerificationButton";
+
 type VerifyPageProps = {
   searchParams: Promise<{
     email?: string | string[] | undefined;
@@ -41,23 +43,8 @@ export default function VerifyPage({ searchParams }: VerifyPageProps) {
               </p>
 
               <Suspense fallback={null}>
-                <VerifyEmail searchParams={searchParams} />
+                <VerifyActions searchParams={searchParams} />
               </Suspense>
-
-              <div className="flex flex-col gap-3">
-                <Link
-                  href={ROUTES.LOGIN}
-                  className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
-                >
-                  Back to sign in
-                </Link>
-                <Link
-                  href={ROUTES.REGISTER}
-                  className="w-full inline-flex items-center justify-center cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none transition-colors duration-150 shadow-none"
-                >
-                  Use another email
-                </Link>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -66,22 +53,41 @@ export default function VerifyPage({ searchParams }: VerifyPageProps) {
   );
 }
 
-async function VerifyEmail({ searchParams }: VerifyPageProps) {
+async function VerifyActions({ searchParams }: VerifyPageProps) {
   const { email } = await searchParams;
   const userEmail = Array.isArray(email) ? email[0] : email;
 
-  if (!userEmail) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col gap-1">
-      <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-        Sent to
-      </span>
-      <p className="border border-foreground bg-background px-3 py-2 font-mono text-sm text-foreground break-all">
-        {userEmail}
-      </p>
-    </div>
+    <>
+      {userEmail ? (
+        <div className="flex flex-col gap-1">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            Sent to
+          </span>
+          <p className="border border-foreground bg-background px-3 py-2 font-mono text-sm text-foreground break-all">
+            {userEmail}
+          </p>
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3">
+        {userEmail ? (
+          <ResendVerificationButton email={userEmail} />
+        ) : (
+          <Link
+            href={ROUTES.LOGIN}
+            className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
+          >
+            Back to sign in
+          </Link>
+        )}
+        <Link
+          href={ROUTES.REGISTER}
+          className="w-full inline-flex items-center justify-center cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none transition-colors duration-150 shadow-none"
+        >
+          Use another email
+        </Link>
+      </div>
+    </>
   );
 }

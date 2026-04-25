@@ -28,18 +28,18 @@ export function SessionsTabPanel({
     staleTime: 60 * 1000,
     queryFn: async (): Promise<PublicSession[]> => {
       const result = await listSessionsPublic();
-      if (!result.success) {
-        throw new Error(result.error.message || "Failed to load active sessions.");
+      if (result?.serverError) {
+        throw new Error(result.serverError?.message || "Failed to load active sessions.");
       }
-      return result.data;
+      return result?.data ?? [];
     },
   });
 
   const revokeSessionMutation = useMutation({
     mutationFn: async ({ sessionId }: { sessionId: string }) => {
       const result = await revokeSessionById({ sessionId });
-      if (!result.success) {
-        throw new Error(result.error.message || "Failed to revoke the session.");
+      if (result?.serverError) {
+        throw new Error(result.serverError?.message || "Failed to revoke the session.");
       }
       return { sessionId };
     },

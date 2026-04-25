@@ -1,7 +1,7 @@
 "use client";
 
 import { signOut } from "@/actions/auth";
-import { ProfileButton } from "@/components/ProfileButton";
+import { ProfileButton } from "@/components/button/ProfileButton";
 import { ProfileDialog } from "@/components/profile/ProfileDialog";
 import { SessionActionsSkeleton } from "@/components/skeletons/SessionActionsSkeleton";
 import Link from "next/link";
@@ -11,14 +11,13 @@ import { accountQueryKey, sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { getAuthenticatedSession, useSession } from "@/hooks/session";
+import { useSession } from "@/hooks/session";
 import { useProfileDialogUrlState } from "@/hooks/profile-dialog-url-state";
 
 export default function SessionActions() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const sessionQuery = useSession();
-  const authenticatedSession = getAuthenticatedSession(sessionQuery.data);
+  const { data: authenticatedSession, isPending } = useSession();
   const { isOpen, activeTab, openTab, closeDialog } =
     useProfileDialogUrlState();
 
@@ -26,8 +25,8 @@ export default function SessionActions() {
     mutationFn: async () => {
       const result = await signOut();
 
-      if (!result.success) {
-        throw new Error(result.error.message || "Failed to sign out.");
+      if (result?.serverError) {
+        throw new Error(result.serverError!.message || "Failed to sign out.");
       }
     },
     onSuccess: () => {
@@ -42,7 +41,7 @@ export default function SessionActions() {
     },
   });
 
-  if (sessionQuery.isPending) {
+  if (isPending) {
     return <SessionActionsSkeleton />;
   }
 

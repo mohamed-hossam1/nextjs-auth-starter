@@ -70,8 +70,8 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
       ? login(data as z.infer<typeof LoginSchema>)
       : register(data as z.infer<typeof RegisterSchema>));
 
-    if (!result.success) {
-      toast.error(result.error.message, { position: "top-center" });
+    if (result?.serverError) {
+      toast.error(result.serverError.message, { position: "top-center" });
       return;
     }
     toast.success(
@@ -99,11 +99,11 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
     setOauthLoading(true);
     try {
       const result = await signInWithGoogle();
-      if (!result.success) {
-        toast.error(result.error.message, { position: "top-center" });
+      if (result?.serverError) {
+        toast.error(result.serverError.message, { position: "top-center" });
         return;
       }
-      const url = result.data?.url;
+      const url = result?.data?.url;
       if (!url) {
         toast.error("Unable to start Google sign in.", {
           position: "top-center",

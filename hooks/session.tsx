@@ -5,29 +5,18 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentSession } from "@/actions/profile";
 import type { AuthenticatedContext } from "@/lib/auth-helpers";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import type { ActionResult } from "@/types/global";
 
 export type SessionPayload = AuthenticatedContext;
-export type SessionQueryData = ActionResult<SessionPayload | null>;
 
 export function useSession() {
-  return useQuery<SessionQueryData>({
+  return useQuery<SessionPayload | null>({
     queryKey: sessionQueryKey,
-    queryFn: () => getCurrentSession(),
+    queryFn: async () => {
+      const result = await getCurrentSession();
+      if (result?.serverError) throw new Error(result.serverError?.message);
+      return result?.data ?? null;
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
-}
-
-export function getAuthenticatedSession(
-  sessionData?: SessionQueryData,
-): SessionPayload | null {
-  if (
-    !sessionData?.success ||
-    !sessionData.data?.session ||
-    !sessionData.data?.user
-  ) {
-    return null;
-  }
-  return sessionData.data;
 }

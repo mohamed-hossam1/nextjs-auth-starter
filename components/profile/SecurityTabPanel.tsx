@@ -36,12 +36,12 @@ export function SecurityTabPanel({
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const result = await hasPassword();
-      if (!result.success) {
+      if (result?.serverError) {
         throw new Error(
-          result.error.message || "Failed to load your security settings.",
+          result.serverError?.message || "Failed to load your security settings.",
         );
       }
-      return Boolean(result.data);
+      return Boolean(result?.data);
     },
   });
 
@@ -51,8 +51,8 @@ export function SecurityTabPanel({
       newPassword: string;
     }) => {
       const result = await changePassword(formData);
-      if (!result.success) {
-        throw new Error(result.error.message || "Failed to change your password.");
+      if (result?.serverError) {
+        throw new Error(result.serverError?.message || "Failed to change your password.");
       }
     },
     onSuccess: () => {
@@ -72,9 +72,9 @@ export function SecurityTabPanel({
   const sendResetEmailMutation = useMutation({
     mutationFn: async () => {
       const result = await sendCurrentUserPasswordResetEmail();
-      if (!result.success) {
+      if (result?.serverError) {
         throw new Error(
-          result.error.message || "Failed to send the password reset email.",
+          result.serverError?.message || "Failed to send the password reset email.",
         );
       }
     },

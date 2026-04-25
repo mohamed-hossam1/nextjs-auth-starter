@@ -1,17 +1,9 @@
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import SessionActions from "@/components/SessionActions";
 import { SessionActionsSkeleton } from "@/components/skeletons/SessionActionsSkeleton";
-import { ROUTES } from "@/constants/routes";
-import { getSession } from "@/lib/auth-helpers";
 
 export default async function AdminPage() {
-  const session = await getSession();
-  if (!session) {
-    redirect(`${ROUTES.LOGIN}?reauth=1`);
-  }
-
   return (
     <div className="min-h-screen w-full bg-background">
       <header className="flex items-center justify-between border-b border-foreground px-6 py-4">

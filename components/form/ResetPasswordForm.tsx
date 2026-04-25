@@ -46,8 +46,8 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
       token,
     });
 
-    if (!result.success) {
-      toast.error(result.error.message, { position: "top-center" });
+    if (result?.serverError) {
+      toast.error(result.serverError.message, { position: "top-center" });
       return;
     }
 

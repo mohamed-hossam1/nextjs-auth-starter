@@ -1,8 +1,16 @@
 import "server-only";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { UnauthorizedError } from "@/lib/nextSafeAction/error/errors";
 
-import type { auth } from "@/lib/auth";
-import { getAuthSession } from "@/lib/actionHandler/auth";
-import { UnauthorizedError } from "@/lib/actionHandler/errors";
+export type AuthUser = {
+  id: string;
+  email: string;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Public-facing types (safe to import in client components)
+// ─────────────────────────────────────────────────────────────
 
 export type PublicSession = {
   id: string;
@@ -28,52 +36,74 @@ export type AuthenticatedContext = {
   user: PublicUser;
 };
 
-type RawSession = NonNullable<
-  Awaited<ReturnType<typeof auth.api.getSession>>
->["session"];
+// ─────────────────────────────────────────────────────────────
+// Internal raw type — defined once
+// ─────────────────────────────────────────────────────────────
 
-type RawUser = NonNullable<
-  Awaited<ReturnType<typeof auth.api.getSession>>
->["user"];
+type RawSession = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 
-export function toPublicSession(session: RawSession): PublicSession {
+// ─────────────────────────────────────────────────────────────
+// Mappers
+// ─────────────────────────────────────────────────────────────
+
+export function toPublicSession(s: RawSession["session"]): PublicSession {
   return {
-    id: session.id,
-    createdAt: session.createdAt.toISOString(),
-    updatedAt: session.updatedAt.toISOString(),
-    expiresAt: session.expiresAt.toISOString(),
-    ipAddress: session.ipAddress ?? null,
-    userAgent: session.userAgent ?? null,
+    id: s.id,
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+    expiresAt: s.expiresAt.toISOString(),
+    ipAddress: s.ipAddress ?? null,
+    userAgent: s.userAgent ?? null,
   };
 }
 
-export function toPublicUser(user: RawUser): PublicUser {
+function toPublicUser(u: RawSession["user"]): PublicUser {
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    emailVerified: user.emailVerified,
-    image: user.image ?? null,
-    createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString(),
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    emailVerified: u.emailVerified,
+    image: u.image ?? null,
+    createdAt: u.createdAt.toISOString(),
+    updatedAt: u.updatedAt.toISOString(),
   };
 }
+
+// ─────────────────────────────────────────────────────────────
+// Core fetch — single call to the auth API
+// ─────────────────────────────────────────────────────────────
+
+async function getRawSession(): Promise<RawSession | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.session || !session.user) return null;
+  return session;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Public API — for server components & actions
+// ─────────────────────────────────────────────────────────────
 
 export async function getSession(): Promise<AuthenticatedContext | null> {
-  const session = await getAuthSession();
-  if (!session) {
-    return null;
-  }
+  const raw = await getRawSession();
+  if (!raw) return null;
   return {
-    session: toPublicSession(session.session),
-    user: toPublicUser(session.user),
+    session: toPublicSession(raw.session),
+    user: toPublicUser(raw.user),
   };
 }
 
 export async function requireSession(): Promise<AuthenticatedContext> {
   const ctx = await getSession();
-  if (!ctx) {
-    throw new UnauthorizedError();
-  }
+  if (!ctx) throw new UnauthorizedError();
   return ctx;
+}
+
+// ─────────────────────────────────────────────────────────────
+// For action handler internal use (create-action.ts)
+// ─────────────────────────────────────────────────────────────
+
+export async function requireUser(): Promise<AuthUser> {
+  const raw = await getRawSession();
+  if (!raw) throw new UnauthorizedError();
+  return { id: raw.user.id, email: raw.user.email };
 }

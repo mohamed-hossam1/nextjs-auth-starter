@@ -1,35 +1,39 @@
 export const ERROR_CODES = [
   "BAD_REQUEST",
   "VALIDATION_ERROR",
+
   "UNAUTHORIZED",
   "FORBIDDEN",
+
   "NOT_FOUND",
+
   "RATE_LIMITED",
+
   "DATABASE_ERROR",
   "INTERNAL_SERVER_ERROR",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
+type ActionErrorOptions = {
+  message: string;
+  code: ErrorCode;
+  expose?: boolean;
+  cause?: unknown;
+};
+
 export class ActionError extends Error {
   public readonly code: ErrorCode;
   public readonly expose: boolean;
   public readonly cause?: unknown;
 
-  constructor({
-    message,
-    code,
-    expose = true,
-    cause,
-  }: {
-    message: string;
-    code: ErrorCode;
-    expose?: boolean;
-    cause?: unknown;
-  }) {
+  constructor({ message, code, expose = true, cause }: ActionErrorOptions) {
     super(message);
+
     Object.setPrototypeOf(this, new.target.prototype);
+
     this.name = this.constructor.name;
+
     this.code = code;
     this.expose = expose;
     this.cause = cause;
@@ -48,17 +52,20 @@ export class BadRequestError extends ActionError {
   }
 }
 
+type ValidationErrorOptions = {
+  message?: string;
+  fields?: Record<string, string[]>;
+  cause?: unknown;
+};
+
 export class ValidationError extends ActionError {
   public readonly fields?: Record<string, string[]>;
+
   constructor({
     message = "Invalid input",
     fields,
     cause,
-  }: {
-    message?: string;
-    fields?: Record<string, string[]>;
-    cause?: unknown;
-  }) {
+  }: ValidationErrorOptions = {}) {
     super({
       message,
       code: "VALIDATION_ERROR",
