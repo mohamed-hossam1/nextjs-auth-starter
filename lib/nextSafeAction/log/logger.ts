@@ -1,81 +1,107 @@
-import { ERROR_LOG_LEVEL } from "./logger-config";
+import { ERROR_LOG_LEVEL, logger } from "./logger-config";
 import type { NormalizedError } from "../types";
-
-type LogLevel = "info" | "warn" | "error";
 
 type BaseLogOptions = {
   action: string;
-  meta?: Record<string, unknown>;
+};
+
+type LogMeta = Record<string, unknown>;
+
+type ActionLogMessageOptions = BaseLogOptions & {
+  message: string;
+  meta?: LogMeta;
 };
 
 type ActionExecutionLogOptions = BaseLogOptions & {
-  duration: number;
+  durationMs: number;
   message?: string;
+  meta?: LogMeta;
 };
 
 type ActionErrorLogOptions = BaseLogOptions & {
   error: NormalizedError;
 };
 
-function createLog({
-  level,
+export function logWarn({ action, message, meta }: ActionLogMessageOptions) {
+  logger.warn(
+    {
+      action,
+      ...meta,
+    },
+    message,
+  );
+}
+
+export function logError({ action, message, meta }: ActionLogMessageOptions) {
+  logger.error(
+    {
+      action,
+      ...meta,
+    },
+    message,
+  );
+}
+
+export function logInfo({
   action,
   message,
-  duration,
+  durationMs,
   meta,
-}: {
-  level: LogLevel;
-  action: string;
-  message: string;
-  duration?: number;
-  meta?: Record<string, unknown>;
-}) {
-  return {
-    timestamp: new Date().toISOString(),
-    level,
-    action,
+}: ActionExecutionLogOptions) {
+  logger.info(
+    {
+      action,
+      durationMs,
+      ...meta,
+    },
     message,
-    ...(duration !== undefined && { duration }),
-    ...(meta && { meta }),
-  };
+  );
 }
 
 export function logActionExecution({
   action,
-  duration,
+  durationMs,
   message = "Action executed successfully",
+  meta,
 }: ActionExecutionLogOptions) {
-  const log = createLog({
-    level: "info",
+  logInfo({
     action,
+    durationMs,
     message,
-    duration,
+    meta,
   });
-  console.info(log);
 }
 
 export function logActionError({ action, error }: ActionErrorLogOptions) {
-  if (error.code === "VALIDATION_ERROR") {
-    return;
-  }
-
   const level = ERROR_LOG_LEVEL[error.code];
 
-  const log = createLog({
-    level,
+  const logMeta = {
+    errorCode: error.code,
+
+    stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+
+    cause:
+      error.cause instanceof Error
+        ? {
+            name: error.cause.name,
+            message: error.cause.message,
+            stack:
+              process.env.NODE_ENV === "development"
+                ? error.cause.stack
+                : undefined,
+          }
+        : error.cause,
+  };
+
+  const payload = {
     action,
-    message: error.message,
-    meta: {
-      errorCode: error.code,
-      stack: error.stack,
-      cause: error.cause,
-    },
-  });
+    ...logMeta,
+  };
 
   if (level === "error") {
-    console.error(log);
+    logger.error(payload, error.message);
     return;
   }
 
-  console.warn(log);
+  logger.warn(payload, error.message);
 }

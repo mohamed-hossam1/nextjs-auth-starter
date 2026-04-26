@@ -54,4 +54,8 @@ CLAUDE.md
 opencode.json
 opencode-mcp
 
+# ignore redis db
 redis
+
+# ignore specs folder
+specs

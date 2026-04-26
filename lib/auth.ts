@@ -3,11 +3,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 
 import { db } from "@/db";
-import { logError } from "@/lib/nextSafeAction/logger";
 import { sendEmailVerificationEmail } from "./emails/verification-email";
 import { sendPasswordResetEmail } from "./emails/password-reset-email";
 import { sendWelcomeEmail } from "./emails/send_welcome_email";
 import { serverEnv } from "./env";
+import { logError } from "./nextSafeAction/log/logger";
 
 const env = serverEnv();
 
@@ -20,7 +20,7 @@ async function bestEffortEmail(
   } catch (error) {
     logError({
       action: `email.${label}`,
-      message: "send failed (best-effort)",
+      message: "Failed to send email",
       meta: { error },
     });
   }

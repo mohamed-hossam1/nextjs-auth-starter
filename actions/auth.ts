@@ -1,9 +1,7 @@
+// TODO: Handle validation error in UI
 "use server";
 
 import { headers } from "next/headers";
-import { isAPIError } from "better-auth/api";
-import { betterAuthError } from "@/lib/nextSafeAction/better-auth-error";
-import { logError, logWarn } from "@/lib/nextSafeAction/logger";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -12,7 +10,14 @@ import { db } from "@/db";
 import { user as userTable } from "@/db/schema/auth-schema";
 import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/nextSafeAction/safe-action";
-import { BadRequestError } from "@/lib/nextSafeAction/error/errors";
+
+import {
+  BadRequestError,
+  InternalServerError,
+} from "@/lib/nextSafeAction/error/errors";
+
+import { fromBetterAuthError } from "@/lib/nextSafeAction/error/better-auth-error";
+
 import { isValidateEmail } from "@/lib/email-validation";
 import {
   ForgotPasswordSchema,
@@ -24,18 +29,25 @@ import {
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
 
 export const register = actionClient
-  .metadata({ actionName: "auth.register" })
+  .metadata({ actionName: "auth:register" })
   .inputSchema(RegisterSchema)
   .action(async ({ parsedInput }) => {
     const emailError = await isValidateEmail(parsedInput.email);
+
     if (emailError) {
       throw new BadRequestError(emailError);
     }
-    const existing = await db.query.user.findFirst({
+
+    const existingUser = await db.query.user.findFirst({
       where: eq(userTable.email, parsedInput.email),
-      columns: { id: true, emailVerified: true },
+
+      columns: {
+        id: true,
+        emailVerified: true,
+      },
     });
-    if (existing && existing.emailVerified) {
+
+    if (existingUser?.emailVerified) {
       throw new BadRequestError(
         "An account with this email already exists. Please sign in instead.",
       );
@@ -44,6 +56,7 @@ export const register = actionClient
     try {
       return await auth.api.signUpEmail({
         headers: await headers(),
+
         body: {
           name: parsedInput.name,
           email: parsedInput.email,
@@ -52,20 +65,14 @@ export const register = actionClient
         },
       });
     } catch (error) {
-      if (isAPIError(error)) {
-        const apiErr = error as unknown as {
-          message?: string;
-          statusCode?: number;
-        };
-        const message = apiErr.message ?? "";
-        if (apiErr.statusCode === 422 || /already/i.test(message)) {
-          throw new BadRequestError(
-            "An account with this email already exists. Please sign in instead.",
-            error,
-          );
-        }
+      if (error instanceof Error && /already/i.test(error.message)) {
+        throw new BadRequestError(
+          "An account with this email already exists. Please sign in instead.",
+          error,
+        );
       }
-      throw betterAuthError(error, "auth:register", {
+
+      throw fromBetterAuthError(error, {
         enumerationSafe: true,
         genericMessage: GENERIC_AUTH_ERROR,
       });
@@ -73,7 +80,7 @@ export const register = actionClient
   });
 
 export const login = actionClient
-  .metadata({ actionName: "auth.login" })
+  .metadata({ actionName: "auth:login" })
   .inputSchema(LoginSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -86,7 +93,7 @@ export const login = actionClient
         },
       });
     } catch (error) {
-      throw betterAuthError(error, "auth:login", {
+      throw fromBetterAuthError(error, {
         enumerationSafe: true,
         genericMessage: GENERIC_AUTH_ERROR,
       });
@@ -94,7 +101,7 @@ export const login = actionClient
   });
 
 export const signInWithGoogle = actionClient
-  .metadata({ actionName: "auth.signInWithGoogle" })
+  .metadata({ actionName: "auth:signInWithGoogle" })
   .action(async () => {
     try {
       return await auth.api.signInSocial({
@@ -105,7 +112,7 @@ export const signInWithGoogle = actionClient
         },
       });
     } catch (error) {
-      throw betterAuthError(error, "auth:google", {
+      throw fromBetterAuthError(error, {
         enumerationSafe: true,
         genericMessage: GENERIC_AUTH_ERROR,
       });
@@ -113,7 +120,7 @@ export const signInWithGoogle = actionClient
   });
 
 export const forgotPassword = actionClient
-  .metadata({ actionName: "auth.forgotPassword" })
+  .metadata({ actionName: "auth:forgotPassword" })
   .inputSchema(ForgotPasswordSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -123,20 +130,11 @@ export const forgotPassword = actionClient
           redirectTo: `${ROUTES.RESETPASSWORD}?type=forgot`,
         },
       });
-    } catch (error) {
-      if (isAPIError(error)) {
-        logWarn({
-          action: "auth.forgotPassword",
-          message: "suppressed API error",
-          meta: { error },
-        });
-      } else {
-        logError({
-          action: "auth.forgotPassword",
-          message: "internal error",
-          meta: { error },
-        });
-      }
+    } catch {
+      /**
+       * Prevent email enumeration.
+       * Always return a success response.
+       */
     }
 
     return {
@@ -146,11 +144,13 @@ export const forgotPassword = actionClient
   });
 
 const ResetPasswordInputSchema = ResetPasswordSchema.extend({
-  token: z.string().min(1, { message: "Invalid or expired reset link." }),
+  token: z.string().min(1, {
+    message: "Invalid or expired reset link.",
+  }),
 });
 
 export const resetPassword = actionClient
-  .metadata({ actionName: "auth.resetPassword" })
+  .metadata({ actionName: "auth:resetPassword" })
   .inputSchema(ResetPasswordInputSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -161,44 +161,40 @@ export const resetPassword = actionClient
         },
       });
     } catch (error) {
-      throw betterAuthError(error, "auth:resetPassword");
+      throw fromBetterAuthError(error);
     }
   });
 
 const ResendVerificationSchema = z.object({
   email: z
     .string()
-    .min(1, { message: "Email is required." })
-    .email({ message: "Please provide a valid email address." })
+    .min(1, {
+      message: "Email is required.",
+    })
+    .email({
+      message: "Please provide a valid email address.",
+    })
     .transform((value) => value.trim().toLowerCase()),
 });
 
 export const resendVerification = actionClient
-  .metadata({ actionName: "auth.resendVerification" })
+  .metadata({ actionName: "auth:resendVerification" })
   .inputSchema(ResendVerificationSchema)
   .action(async ({ parsedInput }) => {
     try {
       await auth.api.sendVerificationEmail({
         headers: await headers(),
+
         body: {
           email: parsedInput.email,
           callbackURL: ROUTES.ADMIN,
         },
       });
-    } catch (error) {
-      if (isAPIError(error)) {
-        logWarn({
-          action: "auth.resendVerification",
-          message: "suppressed API error",
-          meta: { error },
-        });
-      } else {
-        logError({
-          action: "auth.resendVerification",
-          message: "internal error",
-          meta: { error },
-        });
-      }
+    } catch {
+      /**
+       * Prevent email enumeration.
+       * Always return a success response.
+       */
     }
 
     return {
@@ -208,11 +204,13 @@ export const resendVerification = actionClient
   });
 
 export const signOut = actionClient
-  .metadata({ actionName: "auth.signOut" })
+  .metadata({ actionName: "auth:signOut" })
   .action(async () => {
     try {
-      return await auth.api.signOut({ headers: await headers() });
+      return await auth.api.signOut({
+        headers: await headers(),
+      });
     } catch (error) {
-      throw betterAuthError(error, "auth:signOut");
+      throw new InternalServerError("Failed to sign out", error);
     }
   });

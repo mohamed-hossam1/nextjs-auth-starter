@@ -42,7 +42,7 @@ export const actionClient = createSafeActionClient({
   if (!result.serverError) {
     logActionExecution({
       action: metadata.actionName,
-      duration: Date.now() - startedAt,
+      durationMs: Date.now() - startedAt,
     });
   }
 

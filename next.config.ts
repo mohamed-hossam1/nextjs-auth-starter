@@ -17,6 +17,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["pino", "pino-pretty"],
 
   async headers() {
     return [

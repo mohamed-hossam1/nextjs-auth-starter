@@ -2,7 +2,7 @@ import { ActionError, InternalServerError } from "./errors";
 
 import type { NormalizedError } from "../types";
 
-export function normalizeError(error: Error): NormalizedError {
+export function normalizeError(error: unknown): NormalizedError {
   if (error instanceof ActionError) {
     return {
       code: error.code,
