@@ -7,7 +7,7 @@ import { sendEmailVerificationEmail } from "./emails/verification-email";
 import { sendPasswordResetEmail } from "./emails/password-reset-email";
 import { sendWelcomeEmail } from "./emails/send_welcome_email";
 import { serverEnv } from "./env";
-import { logError } from "./nextSafeAction/log/logger";
+import { logError } from "./next-action-handler/log/logger";
 
 const env = serverEnv();
 

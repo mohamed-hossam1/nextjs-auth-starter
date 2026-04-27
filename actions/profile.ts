@@ -17,18 +17,16 @@ import {
 import {
   actionClient,
   authedActionClient,
-} from "@/lib/nextSafeAction/safe-action";
+} from "@/lib/next-action-handler/safe-action";
 
-import { fromBetterAuthError } from "@/lib/nextSafeAction/error/better-auth-error";
+import { fromBetterAuthError } from "@/lib/next-action-handler/error/better-auth-error";
 
-import {
-  NotFoundError,
-} from "@/lib/nextSafeAction/error/errors";
+import { NotFoundError } from "@/lib/next-action-handler/error/errors";
 
 import {
   ChangePasswordSchema,
   UpdateProfileSchema,
-} from "@/lib/schema/profile-schema";
+} from "@/lib/zodSchema/profile-schema";
 
 export const getCurrentSession = actionClient
   .metadata({

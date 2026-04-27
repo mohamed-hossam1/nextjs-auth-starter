@@ -45,3 +45,13 @@ export function fromBetterAuthError(
       return new InternalServerError(message, error);
   }
 }
+
+// use for catch better auth error
+
+// throw fromBetterAuthError(
+//     error,
+//     {
+//       enumerationSafe: true,
+//       genericMessage: "Invalid credentials",
+//     },
+//   );

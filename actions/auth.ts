@@ -9,14 +9,14 @@ import { ROUTES } from "@/constants/routes";
 import { db } from "@/db";
 import { user as userTable } from "@/db/schema/auth-schema";
 import { auth } from "@/lib/auth";
-import { actionClient } from "@/lib/nextSafeAction/safe-action";
+import { actionClient } from "@/lib/next-action-handler/safe-action";
 
 import {
   BadRequestError,
   InternalServerError,
-} from "@/lib/nextSafeAction/error/errors";
+} from "@/lib/next-action-handler/error/errors";
 
-import { fromBetterAuthError } from "@/lib/nextSafeAction/error/better-auth-error";
+import { fromBetterAuthError } from "@/lib/next-action-handler/error/better-auth-error";
 
 import { isValidateEmail } from "@/lib/email-validation";
 import {
@@ -24,7 +24,7 @@ import {
   LoginSchema,
   RegisterSchema,
   ResetPasswordSchema,
-} from "@/lib/schema/auth-schema";
+} from "@/lib/zodSchema/auth-schema";
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
 

@@ -10,7 +10,7 @@ import { z } from "zod";
 
 import { forgotPassword } from "@/actions/auth";
 import { ROUTES } from "@/constants/routes";
-import { ForgotPasswordSchema } from "@/lib/schema/auth-schema";
+import { ForgotPasswordSchema } from "@/lib/zodSchema/auth-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResendForgotPasswordButton } from "@/components/button/ResendForgotPasswordButton";
@@ -44,10 +44,9 @@ export function ForgotPasswordForm() {
 
     setSubmittedEmail(data.email);
     form.reset({ email: data.email });
-    toast.success(
-      "If the email exists, a password reset link has been sent.",
-      { position: "top-center" },
-    );
+    toast.success("If the email exists, a password reset link has been sent.", {
+      position: "top-center",
+    });
   }
 
   if (submittedEmail) {
@@ -68,8 +67,8 @@ export function ForgotPasswordForm() {
                 </div>
 
                 <p className="font-serif-body italic text-sm text-subtitle">
-                  If an account exists for this email, we sent a password
-                  reset link to the inbox below.
+                  If an account exists for this email, we sent a password reset
+                  link to the inbox below.
                 </p>
 
                 <div className="flex flex-col gap-1">
@@ -118,10 +117,7 @@ export function ForgotPasswordForm() {
                   name="email"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field
-                      data-invalid={fieldState.invalid}
-                      className="gap-1"
-                    >
+                    <Field data-invalid={fieldState.invalid} className="gap-1">
                       <FieldLabel
                         htmlFor="forgot-password-email"
                         className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"

@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { LoginSchema, RegisterSchema } from "@/lib/schema/auth-schema";
+import { LoginSchema, RegisterSchema } from "@/lib/zodSchema/auth-schema";
 import { login, register, signInWithGoogle } from "@/actions/auth";
 import { accountQueryKey, sessionQueryKey } from "@/lib/reactQuery/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
@@ -83,7 +83,9 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
     if (isSignIn) {
       queryClient.removeQueries({ queryKey: sessionQueryKey });
       queryClient.removeQueries({ queryKey: accountQueryKey });
-      const destination = resolveNextRedirect(searchParams?.get("next") ?? null);
+      const destination = resolveNextRedirect(
+        searchParams?.get("next") ?? null,
+      );
       router.replace(destination);
       router.refresh();
       return;

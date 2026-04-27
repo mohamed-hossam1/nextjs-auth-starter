@@ -10,7 +10,7 @@ import { z } from "zod";
 
 import { resetPassword } from "@/actions/auth";
 import { ROUTES } from "@/constants/routes";
-import { ResetPasswordSchema } from "@/lib/schema/auth-schema";
+import { ResetPasswordSchema } from "@/lib/zodSchema/auth-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -116,10 +116,7 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
                   name="password"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field
-                      data-invalid={fieldState.invalid}
-                      className="gap-1"
-                    >
+                    <Field data-invalid={fieldState.invalid} className="gap-1">
                       <FieldLabel
                         htmlFor="reset-password"
                         className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
