@@ -8,6 +8,7 @@ export function normalizeError(error: unknown): NormalizedError {
       code: error.code,
       message: error.message,
       expose: error.expose,
+      suppressActionLog: error.suppressActionLog,
 
       cause: error.cause,
       stack: error.stack,

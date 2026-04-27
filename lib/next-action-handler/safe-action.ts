@@ -28,6 +28,7 @@ export const actionClient = createSafeActionClient({
   defineMetadataSchema: () =>
     z.object({
       actionName: z.string(),
+      suppressSuccessLog: z.boolean().optional(),
     }),
 
   handleServerError(error, ctx) {
@@ -49,10 +50,12 @@ export const actionClient = createSafeActionClient({
 
     const normalized = normalizeError(error);
 
-    logActionError({
-      action: ctx.metadata.actionName,
-      error: normalized,
-    });
+    if (!normalized.suppressActionLog) {
+      logActionError({
+        action: ctx.metadata.actionName,
+        error: normalized,
+      });
+    }
 
     return {
       code: normalized.code,
@@ -67,7 +70,7 @@ export const actionClient = createSafeActionClient({
 
   const result = await next();
 
-  if (!result.serverError) {
+  if (!result.serverError && !metadata.suppressSuccessLog) {
     logActionExecution({
       action: metadata.actionName,
       durationMs: Date.now() - startedAt,

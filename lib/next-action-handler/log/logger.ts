@@ -117,15 +117,14 @@ export function logActionExecution({
 export function logActionError({ action, error }: ActionErrorLogOptions) {
   const level = ERROR_LOG_LEVEL[error.code];
   const isDevelopment = process.env.NODE_ENV === "development";
-  const showDetails = process.env.NODE_ENV === "development";
 
-  const cause = showDetails
+  const cause = isDevelopment
     ? buildCauseMeta(error.cause, isDevelopment)
     : undefined;
 
   const logMeta = {
     errorCode: error.code,
-    ...(showDetails ? { stack: error.stack, cause } : {}),
+    ...(isDevelopment ? { stack: error.stack, cause } : {}),
   };
 
   const payload = {

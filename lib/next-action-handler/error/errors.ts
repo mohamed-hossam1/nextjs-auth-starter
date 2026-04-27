@@ -18,17 +18,20 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 export class ActionError extends Error {
   public readonly code: ErrorCode;
   public readonly expose: boolean;
+  public readonly suppressActionLog: boolean;
   public readonly cause?: unknown;
 
   constructor({
     message,
     code,
     expose = true,
+    suppressActionLog = false,
     cause,
   }: {
     message: string;
     code: ErrorCode;
     expose?: boolean;
+    suppressActionLog?: boolean;
     cause?: unknown;
   }) {
     super(message);
@@ -37,6 +40,7 @@ export class ActionError extends Error {
 
     this.code = code;
     this.expose = expose;
+    this.suppressActionLog = suppressActionLog;
     this.cause = cause;
 
     Object.setPrototypeOf(this, new.target.prototype);

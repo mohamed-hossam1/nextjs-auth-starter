@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import type { Logger } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 
@@ -7,9 +8,30 @@ import { sendEmailVerificationEmail } from "./emails/verification-email";
 import { sendPasswordResetEmail } from "./emails/password-reset-email";
 import { sendWelcomeEmail } from "./emails/send_welcome_email";
 import { serverEnv } from "./env";
-import { logError } from "./next-action-handler/log/logger";
+import { logError, logInfo, logWarn } from "./next-action-handler/log/logger";
 
 const env = serverEnv();
+
+const authLogger: Logger = {
+  disabled: false,
+  disableColors: false,
+  level: "warn",
+  log(level, message, ...args) {
+    const meta = args.length ? { args } : undefined;
+
+    if (level === "error") {
+      logError({ action: "auth.logger", message, meta });
+      return;
+    }
+
+    if (level === "warn") {
+      logWarn({ action: "auth.logger", message, meta });
+      return;
+    }
+
+    logInfo({ action: "auth.logger", message, meta });
+  },
+};
 
 async function bestEffortEmail(
   label: string,
@@ -29,6 +51,7 @@ async function bestEffortEmail(
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
+  logger: authLogger,
 
   user: {
     changeEmail: {

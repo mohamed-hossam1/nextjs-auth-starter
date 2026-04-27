@@ -17,6 +17,7 @@ import {
 } from "@/lib/next-action-handler/error/errors";
 
 import { fromBetterAuthError } from "@/lib/next-action-handler/error/better-auth-error";
+import { logError } from "@/lib/next-action-handler/log/logger";
 
 import { isValidateEmail } from "@/lib/email-validation";
 import {
@@ -27,9 +28,17 @@ import {
 } from "@/lib/zodSchema/auth-schema";
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
+const FORGOT_PASSWORD_RESPONSE = {
+  message:
+    "If an account exists for this email, a password reset link has been sent.",
+};
+const RESEND_VERIFICATION_RESPONSE = {
+  message:
+    "If your email needs verification, a new verification link has been sent.",
+};
 
 export const register = actionClient
-  .metadata({ actionName: "auth:register" })
+  .metadata({ actionName: "auth.register" })
   .inputSchema(RegisterSchema)
   .action(async ({ parsedInput }) => {
     const emailError = await isValidateEmail(parsedInput.email);
@@ -73,14 +82,13 @@ export const register = actionClient
       }
 
       throw fromBetterAuthError(error, {
-        enumerationSafe: true,
         genericMessage: GENERIC_AUTH_ERROR,
       });
     }
   });
 
 export const login = actionClient
-  .metadata({ actionName: "auth:login" })
+  .metadata({ actionName: "auth.login" })
   .inputSchema(LoginSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -93,15 +101,13 @@ export const login = actionClient
         },
       });
     } catch (error) {
-      throw fromBetterAuthError(error, {
-        enumerationSafe: true,
-        genericMessage: GENERIC_AUTH_ERROR,
-      });
+      console.log("hello", error);
+      throw fromBetterAuthError(error);
     }
   });
 
 export const signInWithGoogle = actionClient
-  .metadata({ actionName: "auth:signInWithGoogle" })
+  .metadata({ actionName: "auth.signInWithGoogle" })
   .action(async () => {
     try {
       return await auth.api.signInSocial({
@@ -113,16 +119,35 @@ export const signInWithGoogle = actionClient
       });
     } catch (error) {
       throw fromBetterAuthError(error, {
-        enumerationSafe: true,
         genericMessage: GENERIC_AUTH_ERROR,
       });
     }
   });
 
 export const forgotPassword = actionClient
-  .metadata({ actionName: "auth:forgotPassword" })
+  .metadata({
+    actionName: "auth.forgotPassword",
+    suppressSuccessLog: true,
+  })
   .inputSchema(ForgotPasswordSchema)
   .action(async ({ parsedInput }) => {
+    const existingUser = await db.query.user.findFirst({
+      where: eq(userTable.email, parsedInput.email),
+      columns: {
+        id: true,
+      },
+    });
+
+    if (!existingUser) {
+      logError({
+        action: "auth.forgotPassword",
+        message: "Reset Password: User not found",
+        meta: { email: parsedInput.email },
+      });
+
+      return FORGOT_PASSWORD_RESPONSE;
+    }
+
     try {
       await auth.api.requestPasswordReset({
         body: {
@@ -137,10 +162,7 @@ export const forgotPassword = actionClient
        */
     }
 
-    return {
-      message:
-        "If an account exists for this email, a password reset link has been sent.",
-    };
+    return FORGOT_PASSWORD_RESPONSE;
   });
 
 const ResetPasswordInputSchema = ResetPasswordSchema.extend({
@@ -150,7 +172,7 @@ const ResetPasswordInputSchema = ResetPasswordSchema.extend({
 });
 
 export const resetPassword = actionClient
-  .metadata({ actionName: "auth:resetPassword" })
+  .metadata({ actionName: "auth.resetPassword" })
   .inputSchema(ResetPasswordInputSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -178,7 +200,10 @@ const ResendVerificationSchema = z.object({
 });
 
 export const resendVerification = actionClient
-  .metadata({ actionName: "auth:resendVerification" })
+  .metadata({
+    actionName: "auth.resendVerification",
+    suppressSuccessLog: true,
+  })
   .inputSchema(ResendVerificationSchema)
   .action(async ({ parsedInput }) => {
     try {
@@ -197,14 +222,11 @@ export const resendVerification = actionClient
        */
     }
 
-    return {
-      message:
-        "If your email needs verification, a new verification link has been sent.",
-    };
+    return RESEND_VERIFICATION_RESPONSE;
   });
 
 export const signOut = actionClient
-  .metadata({ actionName: "auth:signOut" })
+  .metadata({ actionName: "auth.signOut" })
   .action(async () => {
     try {
       return await auth.api.signOut({

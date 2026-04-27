@@ -1,10 +1,8 @@
 import { isAPIError } from "better-auth/api";
 
 import {
-  BadRequestError,
+  ActionError,
   InternalServerError,
-  UnauthorizedError,
-  type ActionError,
 } from "./errors";
 
 type BetterAuthApiError = {
@@ -13,8 +11,8 @@ type BetterAuthApiError = {
 };
 
 type BetterAuthErrorOptions = {
-  enumerationSafe?: boolean;
   genericMessage?: string;
+  suppressExpectedActionLog?: boolean;
 };
 
 export function fromBetterAuthError(
@@ -30,16 +28,27 @@ export function fromBetterAuthError(
 
   const apiError = error as BetterAuthApiError;
 
-  const message = options.enumerationSafe
-    ? (options.genericMessage ?? "Invalid credentials")
-    : (apiError.message ?? "Something went wrong");
+  const message =
+    options.genericMessage ?? apiError.message ?? "Something went wrong";
+
+  const suppressActionLog = options.suppressExpectedActionLog ?? true;
 
   switch (apiError.statusCode) {
     case 400:
-      return new BadRequestError(message, error);
+      return new ActionError({
+        code: "BAD_REQUEST",
+        message,
+        cause: error,
+        suppressActionLog,
+      });
 
     case 401:
-      return new UnauthorizedError(message, error);
+      return new ActionError({
+        code: "UNAUTHORIZED",
+        message,
+        cause: error,
+        suppressActionLog,
+      });
 
     default:
       return new InternalServerError(message, error);
@@ -51,7 +60,6 @@ export function fromBetterAuthError(
 // throw fromBetterAuthError(
 //     error,
 //     {
-//       enumerationSafe: true,
 //       genericMessage: "Invalid credentials",
 //     },
 //   );
