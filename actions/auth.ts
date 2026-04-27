@@ -101,7 +101,6 @@ export const login = actionClient
         },
       });
     } catch (error) {
-      console.log("hello", error);
       throw fromBetterAuthError(error);
     }
   });
