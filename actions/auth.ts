@@ -28,14 +28,6 @@ import {
 } from "@/lib/zodSchema/auth-schema";
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
-const FORGOT_PASSWORD_RESPONSE = {
-  message:
-    "If an account exists for this email, a password reset link has been sent.",
-};
-const RESEND_VERIFICATION_RESPONSE = {
-  message:
-    "If your email needs verification, a new verification link has been sent.",
-};
 
 export const register = actionClient
   .metadata({ actionName: "auth.register" })
@@ -139,6 +131,11 @@ export const forgotPassword = actionClient
       },
     });
 
+    const forgotPasswordResponse = {
+      message:
+        "If an account exists for this email, a password reset link has been sent.",
+    };
+
     if (!existingUser) {
       logError({
         action: "auth.forgotPassword",
@@ -146,7 +143,7 @@ export const forgotPassword = actionClient
         meta: { email: parsedInput.email },
       });
 
-      return FORGOT_PASSWORD_RESPONSE;
+      return forgotPasswordResponse;
     }
 
     try {
@@ -163,7 +160,7 @@ export const forgotPassword = actionClient
        */
     }
 
-    return FORGOT_PASSWORD_RESPONSE;
+    return forgotPasswordResponse;
   });
 
 const ResetPasswordInputSchema = ResetPasswordSchema.extend({
@@ -225,7 +222,10 @@ export const resendVerification = actionClient
        */
     }
 
-    return RESEND_VERIFICATION_RESPONSE;
+    return {
+      message:
+        "If your email needs verification, a new verification link has been sent.",
+    };
   });
 
 export const signOut = actionClient

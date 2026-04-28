@@ -61,7 +61,7 @@ export function ProfileDialog({
         >
           <aside className="flex w-full shrink-0 flex-col border-b border-foreground bg-card p-5 md:w-[260px] md:border-b-0 md:border-r">
             <div className="flex items-center gap-3 md:flex-col md:items-start md:text-left">
-              <Avatar className="h-14 w-14 shrink-0">
+              <Avatar className="size-14 shrink-0">
                 <AvatarImage src={user.image ?? undefined} alt={user.name} />
                 <AvatarFallback className="bg-foreground text-background font-mono text-sm font-medium tracking-[0.06em] uppercase">
                   {initials}
@@ -98,7 +98,7 @@ export function ProfileDialog({
                 onClick={onSignOut}
                 disabled={isSigningOut}
               >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <LogOut className="size-4" aria-hidden="true" />
                 {isSigningOut ? "Signing out…" : "Sign out"}
               </Button>
             </div>

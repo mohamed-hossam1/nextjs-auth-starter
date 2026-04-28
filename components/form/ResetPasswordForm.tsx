@@ -11,7 +11,8 @@ import { z } from "zod";
 import { resetPassword } from "@/actions/auth";
 import { ROUTES } from "@/constants/routes";
 import { ResetPasswordSchema } from "@/lib/zodSchema/auth-schema";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button.variants";
 import { AuthCard } from "@/components/form/auth-card";
 import { AuthFieldLabel, AuthInput } from "@/components/form/auth-field-label";
 import {

@@ -1,4 +1,4 @@
-export const PROFILE_DIALOG_TABS = [
+const PROFILE_DIALOG_TABS = [
   "profile",
   "security",
   "sessions",

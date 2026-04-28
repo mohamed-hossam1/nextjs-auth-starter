@@ -30,7 +30,7 @@ export function ProfileTabsList() {
             value={tab.value}
             className="group relative inline-flex h-auto w-full items-center justify-start gap-2.5 rounded-none border-l-2 border-transparent bg-transparent px-3 py-2 font-serif-body text-[15px] text-foreground transition-colors cursor-pointer hover:bg-foreground/5 hover:text-foreground data-active:border-l-accent data-active:bg-accent/10 data-active:text-accent data-active:shadow-none focus-visible:border-l-accent focus-visible:bg-accent/5 focus-visible:outline-none focus-visible:ring-0"
           >
-            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
             <span>{tab.label}</span>
           </TabsTrigger>
         );

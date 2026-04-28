@@ -95,11 +95,11 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
 
   return (
     <TabsContent value="profile" className="m-0 outline-none">
-      <div className="flex flex-col gap-7 px-6 py-6">
+      <div className="flex flex-col gap-7 p-6">
         <SectionHeader title="Profile" description="Manage your personal information." />
 
         <div className="flex flex-col gap-4 border border-foreground border-t-4 border-t-accent bg-card p-4 sm:flex-row sm:items-center">
-          <Avatar className="h-16 w-16 shrink-0">
+          <Avatar className="size-16 shrink-0">
             <AvatarImage src={user.image ?? undefined} alt={user.name} />
             <AvatarFallback className="bg-foreground text-background font-mono text-base font-medium tracking-[0.06em] uppercase">
               {initials}
@@ -122,7 +122,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-email"
-              icon={<Mail className="h-3 w-3" />}
+                icon={<Mail className="size-3" />}
             >
               Email Address
             </ProfileFieldLabel>
@@ -137,7 +137,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-display-name"
-              icon={<UserIcon className="h-3 w-3" />}
+                icon={<UserIcon className="size-3" />}
             >
               Display Name
             </ProfileFieldLabel>
@@ -162,12 +162,12 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
                     type="submit"
                     disabled={updateProfileMutation.isPending}
                     aria-label="Save display name"
-                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-none border border-foreground bg-foreground text-background transition-colors hover:bg-accent hover:border-accent disabled:pointer-events-none disabled:opacity-50"
+                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-none border border-foreground bg-foreground text-background transition-colors hover:bg-accent hover:border-accent disabled:pointer-events-none disabled:opacity-50"
                   >
                     {updateProfileMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <Check className="h-4 w-4" />
+                      <Check className="size-4" />
                     )}
                   </button>
                   <button
@@ -175,9 +175,9 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
                     onClick={handleCancelName}
                     disabled={updateProfileMutation.isPending}
                     aria-label="Cancel editing display name"
-                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-none border border-foreground bg-transparent text-foreground transition-colors hover:bg-foreground hover:text-background disabled:pointer-events-none disabled:opacity-50"
+                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-none border border-foreground bg-transparent text-foreground transition-colors hover:bg-foreground hover:text-background disabled:pointer-events-none disabled:opacity-50"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="size-4" />
                   </button>
                 </div>
               </form>
@@ -195,7 +195,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
                   aria-label="Edit display name"
                   className="cursor-pointer text-muted-foreground transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-none"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Pencil className="size-3.5" />
                 </button>
               </div>
             )}

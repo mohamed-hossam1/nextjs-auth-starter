@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { ResetPasswordForm } from "@/components/form/ResetPasswordForm";
 import { ROUTES } from "@/constants/routes";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button.variants";
 import { AuthCard } from "@/components/form/auth-card";
 import { ResetPasswordSkeleton } from "@/components/skeletons/ResetPasswordSkeleton";
 

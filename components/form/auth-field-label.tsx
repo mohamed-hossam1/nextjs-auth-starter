@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils";
 
 export function AuthFieldLabel({
   className,
+  htmlFor,
   ...props
-}: ComponentProps<"label">) {
+}: ComponentProps<"label"> & { htmlFor: string }) {
   return (
     <label
+      htmlFor={htmlFor}
       className={cn(
         "font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block",
         className,
@@ -30,3 +32,4 @@ export function AuthInput({
     />
   );
 }
+

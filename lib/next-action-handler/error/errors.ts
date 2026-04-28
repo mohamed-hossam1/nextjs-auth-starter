@@ -1,4 +1,4 @@
-export const ERROR_CODES = [
+const ERROR_CODES = [
   "BAD_REQUEST",
   "VALIDATION_ERROR",
 

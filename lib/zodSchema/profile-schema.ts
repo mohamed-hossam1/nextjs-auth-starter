@@ -13,14 +13,6 @@ export const UpdateProfileSchema = z.object({
     .max(30, { message: "Username cannot exceed 30 characters." }),
 });
 
-export const ChangeEmailSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email is required." })
-    .email({ message: "Please provide a valid email address." })
-    .transform((value) => value.trim().toLowerCase()),
-});
-
 export const ChangePasswordSchema = z.object({
   currentPassword: PasswordRule,
   newPassword: PasswordRule,

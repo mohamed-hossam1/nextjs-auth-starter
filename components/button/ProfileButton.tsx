@@ -28,7 +28,7 @@ export function ProfileButton({
         isOpen && "border-accent",
       )}
     >
-      <Avatar className="h-9 w-9">
+      <Avatar className="size-9">
         <AvatarImage src={user.image ?? undefined} alt={user.name} />
         <AvatarFallback className="bg-foreground text-background font-mono text-xs font-medium tracking-[0.06em] uppercase">
           {initials}

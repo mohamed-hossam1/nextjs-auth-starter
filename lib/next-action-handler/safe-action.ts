@@ -19,8 +19,7 @@ const OUTPUT_VALIDATION_SERVER_ERROR_MESSAGE =
 function isActionOutputDataValidationError(error: unknown): error is Error {
   return (
     error instanceof Error &&
-    (error.name === "ActionOutputDataValidationError" ||
-      error.constructor?.name === "ActionOutputDataValidationError")
+    error.name === "ActionOutputDataValidationError"
   );
 }
 

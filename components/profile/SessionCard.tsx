@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  DeviceIcon,
-  getBrowserInfo,
-  getBrowserInformation,
-} from "@/lib/visitorInfo/browserInfo";
+import { getBrowserInfo, getBrowserInformation } from "@/lib/visitorInfo/browserInfo";
+import { DeviceIcon } from "@/lib/visitorInfo/DeviceIcon";
 import type { PublicSession } from "@/lib/auth-helpers";
 import { Badge } from "@/components/profile/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +42,7 @@ export default function SessionCard({
         )}
         aria-hidden="true"
       >
-        <DeviceIcon device={browserInfo.device} className="h-4 w-4" />
+        <DeviceIcon device={browserInfo.device} className="size-4" />
       </div>
 
       <div className="min-w-0 flex-1">

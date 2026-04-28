@@ -2,7 +2,7 @@
 
 import { AlertCircle, Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -32,6 +32,7 @@ export function SecurityTabPanel({
   const [newPassword, setNewPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const queryClient = useQueryClient();
 
   const hasPasswordQuery = useQuery({
     queryKey: accountHasPasswordQueryKey,
@@ -63,6 +64,7 @@ export function SecurityTabPanel({
       setNewPassword("");
       setShowCurrentPassword(false);
       setShowNewPassword(false);
+      queryClient.invalidateQueries({ queryKey: accountHasPasswordQueryKey });
       toast.success("Password changed successfully.", {
         position: "top-center",
       });
@@ -82,6 +84,7 @@ export function SecurityTabPanel({
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accountHasPasswordQueryKey });
       toast.success("Password reset email sent. Check your inbox.", {
         position: "top-center",
       });
@@ -123,7 +126,7 @@ export function SecurityTabPanel({
 
   return (
     <TabsContent value="security" className="m-0 outline-none">
-      <div className="flex flex-col gap-7 px-6 py-6">
+      <div className="flex flex-col gap-7 p-6">
         <SectionHeader title="Security" description="Manage your password and account security." />
 
         {isLoadingPasswordState && (
@@ -137,7 +140,7 @@ export function SecurityTabPanel({
           <div className="flex flex-col gap-3 border border-destructive bg-destructive/5 p-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <AlertCircle
-                className="mt-0.5 h-5 w-5 shrink-0 text-destructive"
+                className="mt-0.5 size-5 shrink-0 text-destructive"
                 aria-hidden="true"
               />
               <div>
@@ -168,7 +171,7 @@ export function SecurityTabPanel({
           >
             <div className="flex items-center gap-3 border border-border bg-card px-3 py-2.5">
               <KeyRound
-                className="h-4 w-4 shrink-0 text-foreground"
+                className="size-4 shrink-0 text-foreground"
                 aria-hidden="true"
               />
               <p className="font-serif-body italic text-sm text-subtitle">
@@ -203,9 +206,9 @@ export function SecurityTabPanel({
                   aria-pressed={showCurrentPassword}
                 >
                   {showCurrentPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="size-4" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="size-4" />
                   )}
                 </button>
               </div>
@@ -238,9 +241,9 @@ export function SecurityTabPanel({
                   aria-pressed={showNewPassword}
                 >
                   {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="size-4" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="size-4" />
                   )}
                 </button>
               </div>
@@ -258,7 +261,7 @@ export function SecurityTabPanel({
               }
             >
               {changePasswordMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Change Password"
               )}
@@ -270,7 +273,7 @@ export function SecurityTabPanel({
           <div className="flex flex-col gap-5">
             <div className="flex items-start gap-3 border border-foreground bg-card p-4">
               <Mail
-                className="mt-0.5 h-5 w-5 shrink-0 text-accent"
+                className="mt-0.5 size-5 shrink-0 text-accent"
                 aria-hidden="true"
               />
               <div className="flex-1">
@@ -297,7 +300,7 @@ export function SecurityTabPanel({
               disabled={sendResetEmailMutation.isPending}
             >
               {sendResetEmailMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Send Reset Email"
               )}

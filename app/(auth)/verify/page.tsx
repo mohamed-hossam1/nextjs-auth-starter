@@ -4,7 +4,7 @@ import { MailCheck } from "lucide-react";
 
 import { ROUTES } from "@/constants/routes";
 import { AuthCard } from "@/components/form/auth-card";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button.variants";
 
 import { ResendVerificationButton } from "@/components/button/ResendVerificationButton";
 

@@ -74,7 +74,7 @@ export function SessionsTabPanel({
 
   return (
     <TabsContent value="sessions" className="m-0 outline-none">
-      <div className="flex flex-col gap-7 px-6 py-6">
+      <div className="flex flex-col gap-7 p-6">
         <SectionHeader title="Active Sessions" description="Manage devices where you are currently signed in." />
 
         {sessionsQuery.isPending && sessionsQuery.data === undefined && (
@@ -92,7 +92,7 @@ export function SessionsTabPanel({
           <div className="flex flex-col gap-3 border border-destructive bg-destructive/5 p-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <AlertCircle
-                className="mt-0.5 h-5 w-5 shrink-0 text-destructive"
+                className="mt-0.5 size-5 shrink-0 text-destructive"
                 aria-hidden="true"
               />
               <div>
@@ -134,9 +134,9 @@ export function SessionsTabPanel({
             </p>
 
             {otherSessions.length === 0 ? (
-              <div className="flex items-center gap-3 border border-border bg-card px-3 py-3">
+              <div className="flex items-center gap-3 border border-border bg-card p-3">
                 <ShieldCheck
-                  className="h-5 w-5 shrink-0 text-accent"
+                  className="size-5 shrink-0 text-accent"
                   aria-hidden="true"
                 />
                 <p className="font-serif-body italic text-sm text-subtitle">

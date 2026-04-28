@@ -11,10 +11,10 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "lint": "eslint",
-    "test:integration": "bun --env-file=.env.local run tests/integration/action-errors/runner.ts"
+    "test:integration": "bun --env-file=.env.local run tests/integration/action-errors/runner.ts",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "^1.6.11",
     "@hookform/resolvers": "^5.4.0",
     "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-query-devtools": "^5.100.14",
@@ -53,6 +53,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "next-action-handler": "^1.0.1",
+    "react-doctor": "^0.2.14",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5"

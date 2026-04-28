@@ -1,5 +1,7 @@
 "use client";
 
+import "./globals.css";
+
 export default function GlobalError({
   error,
   reset,
@@ -12,65 +14,24 @@ export default function GlobalError({
       <head>
         <title>Something went wrong</title>
       </head>
-      <body
-        style={{
-          margin: 0,
-          minHeight: "100dvh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily:
-            "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-          background: "#fff",
-          color: "#111",
-        }}
-      >
-        <main
-          style={{
-            maxWidth: 480,
-            padding: "2rem",
-            textAlign: "center",
-          }}
-        >
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 600, margin: 0 }}>
+      <body className="m-0 min-h-[100dvh] flex items-center justify-center font-sans bg-background text-foreground">
+        <main className="w-full max-w-[480px] p-8 text-center">
+          <h1 className="text-2xl font-semibold m-0">
             Something went wrong
           </h1>
-          <p
-            style={{
-              marginTop: "0.75rem",
-              color: "#555",
-              fontSize: "0.95rem",
-              lineHeight: 1.5,
-            }}
-          >
-            An unexpected error interrupted this page. Please try again — if
+          <p className="mt-3 text-muted-foreground text-[0.95rem] leading-relaxed">
+            An unexpected error interrupted this page. Please try again: if
             it keeps happening, contact support.
           </p>
           {error?.digest ? (
-            <p
-              style={{
-                marginTop: "1rem",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                fontSize: "0.75rem",
-                color: "#888",
-              }}
-            >
+            <p className="mt-4 font-mono text-xs text-neutral-500">
               Reference: {error.digest}
             </p>
           ) : null}
           <button
             type="button"
             onClick={reset}
-            style={{
-              marginTop: "1.5rem",
-              padding: "0.625rem 1.25rem",
-              border: "1px solid #111",
-              background: "#111",
-              color: "#fff",
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="mt-6 px-5 py-2.5 border border-primary bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-opacity cursor-pointer inline-flex items-center justify-center"
           >
             Try again
           </button>
