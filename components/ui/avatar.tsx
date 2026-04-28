@@ -7,22 +7,19 @@ import { cn } from "@/lib/utils";
 import { AvatarImage } from "./avatar-image";
 import { AvatarFallback } from "./avatar-fallback";
 
-function Avatar({
-  className,
-  ref,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
-  return (
-    <AvatarPrimitive.Root
-      ref={ref}
-      className={cn(
-        "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-        className
-      )}
-      {...props}
-    />
-  );
-}
+const Avatar = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
+      className
+    )}
+    {...props}
+  />
+));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
 export { Avatar, AvatarImage, AvatarFallback };
