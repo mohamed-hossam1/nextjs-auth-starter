@@ -19,6 +19,12 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        auth:
+          "bg-foreground text-background border border-foreground hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold rounded-none shadow-none transition-colors duration-150 cursor-pointer",
+        "auth-outline":
+          "border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-mono text-xs uppercase tracking-widest font-bold rounded-none shadow-none transition-colors duration-150 cursor-pointer",
+        "auth-destructive":
+          "border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-background font-mono text-xs font-bold uppercase tracking-[0.18em] rounded-none shadow-none transition-colors duration-150 cursor-pointer",
       },
       size: {
         default:
@@ -32,6 +38,9 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        "auth-lg": "w-full py-5 gap-2",
+        "auth-md": "w-full py-3 px-4 gap-2",
+        "auth-sm": "py-2 px-3 gap-2",
       },
     },
     defaultVariants: {

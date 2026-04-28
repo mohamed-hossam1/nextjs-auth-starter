@@ -8,15 +8,14 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { AuthCard } from "@/components/form/auth-card";
+import { AuthFieldLabel, AuthInput } from "@/components/form/auth-field-label";
 import {
   Field,
   FieldError,
   FieldGroup,
-  FieldLabel,
   FieldContent,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
@@ -121,13 +120,12 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
   return (
     <>
       <div className="flex flex-col items-center w-full justify-center">
-        <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-6">
+        <AuthCard>
+          <div className="flex flex-col gap-6">
               <Button
                 type="button"
-                variant="outline"
-                className="w-full cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-5 rounded-none flex items-center justify-center gap-2 transition-colors duration-150 shadow-none"
+                variant="auth-outline"
+                size="auth-lg"
                 onClick={handleGoogleSignIn}
                 disabled={oauthLoading || form.formState.isSubmitting}
               >
@@ -175,20 +173,16 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
                           data-invalid={fieldState.invalid}
                           className="gap-1"
                         >
-                          <FieldLabel
-                            htmlFor="auth-name"
-                            className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
-                          >
+                          <AuthFieldLabel htmlFor="auth-name">
                             Name
-                          </FieldLabel>
+                          </AuthFieldLabel>
                           <FieldContent>
-                            <Input
+                            <AuthInput
                               {...field}
                               id="auth-name"
                               aria-invalid={fieldState.invalid}
                               placeholder="Enter your name"
                               autoComplete="name"
-                              className="rounded-none border-foreground focus-visible:ring-0 focus-visible:border-accent text-foreground bg-background placeholder:text-muted-foreground/60 h-10 px-3"
                             />
                             {fieldState.invalid && (
                               <FieldError
@@ -210,21 +204,17 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
                         data-invalid={fieldState.invalid}
                         className="gap-1"
                       >
-                        <FieldLabel
-                          htmlFor="auth-email"
-                          className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
-                        >
+                        <AuthFieldLabel htmlFor="auth-email">
                           Email
-                        </FieldLabel>
+                        </AuthFieldLabel>
                         <FieldContent>
-                          <Input
+                          <AuthInput
                             {...field}
                             id="auth-email"
                             type="email"
                             aria-invalid={fieldState.invalid}
                             placeholder="Enter your email"
                             autoComplete="email"
-                            className="rounded-none border-foreground focus-visible:ring-0 focus-visible:border-accent text-foreground bg-background placeholder:text-muted-foreground/60 h-10 px-3"
                           />
                           {fieldState.invalid && (
                             <FieldError
@@ -245,14 +235,11 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
                         data-invalid={fieldState.invalid}
                         className="gap-1"
                       >
-                        <FieldLabel
-                          htmlFor="auth-password"
-                          className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
-                        >
+                        <AuthFieldLabel htmlFor="auth-password">
                           Password
-                        </FieldLabel>
+                        </AuthFieldLabel>
                         <FieldContent className="relative">
-                          <Input
+                          <AuthInput
                             {...field}
                             id="auth-password"
                             type={showPassword ? "text" : "password"}
@@ -265,7 +252,7 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
                             autoComplete={
                               isSignIn ? "current-password" : "new-password"
                             }
-                            className="pr-10 rounded-none border-foreground focus-visible:ring-0 focus-visible:border-accent text-foreground bg-background placeholder:text-muted-foreground/60 h-10 px-3"
+                            className="pr-10"
                           />
 
                           <button
@@ -308,7 +295,9 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
 
                 <Button
                   type="submit"
-                  className="w-full bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-5 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground mt-2"
+                  variant="auth"
+                  size="auth-lg"
+                  className="mt-2"
                   disabled={form.formState.isSubmitting || oauthLoading}
                 >
                   {form.formState.isSubmitting ? (
@@ -321,8 +310,7 @@ export function AuthForm({ defaultValues, formType }: AuthFormProps) {
                 </Button>
               </form>
             </div>
-          </CardContent>
-        </Card>
+        </AuthCard>
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-2 w-full justify-center mt-6 text-center">
         <p className="text-sm font-serif-body italic text-muted-foreground">

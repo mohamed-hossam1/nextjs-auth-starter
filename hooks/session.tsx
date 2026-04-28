@@ -6,10 +6,8 @@ import { getCurrentSession } from "@/actions/profile";
 import type { AuthenticatedContext } from "@/lib/auth-helpers";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
 
-export type SessionPayload = AuthenticatedContext;
-
 export function useSession() {
-  return useQuery<SessionPayload | null>({
+  return useQuery<AuthenticatedContext | null>({
     queryKey: sessionQueryKey,
     queryFn: async () => {
       const result = await getCurrentSession();

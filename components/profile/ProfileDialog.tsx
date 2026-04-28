@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "radix-ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -89,15 +90,17 @@ export function ProfileDialog({
                 <ProfileTabsList />
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="auth-destructive"
+                size="auth-sm"
+                className="mt-auto w-full justify-start gap-2.5 px-3 py-2.5"
                 onClick={onSignOut}
                 disabled={isSigningOut}
-                className="mt-auto inline-flex w-full cursor-pointer items-center justify-start gap-2.5 rounded-none border border-destructive bg-transparent px-3 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.18em] text-destructive transition-colors hover:bg-destructive hover:text-background disabled:pointer-events-none disabled:opacity-50"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 {isSigningOut ? "Signing out…" : "Sign out"}
-              </button>
+              </Button>
             </div>
           </aside>
 

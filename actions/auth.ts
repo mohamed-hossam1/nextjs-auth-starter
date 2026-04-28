@@ -101,7 +101,9 @@ export const login = actionClient
         },
       });
     } catch (error) {
-      throw fromBetterAuthError(error);
+      throw fromBetterAuthError(error, {
+        genericMessage: GENERIC_AUTH_ERROR,
+      });
     }
   });
 
@@ -182,7 +184,9 @@ export const resetPassword = actionClient
         },
       });
     } catch (error) {
-      throw fromBetterAuthError(error);
+      throw fromBetterAuthError(error, {
+        genericMessage: "Invalid or expired reset link.",
+      });
     }
   });
 

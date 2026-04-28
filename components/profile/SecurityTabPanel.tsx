@@ -10,7 +10,10 @@ import {
   hasPassword,
   sendCurrentUserPasswordResetEmail,
 } from "@/actions/profile";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProfileFieldLabel } from "@/components/profile/field-label";
+import { SectionHeader } from "@/components/profile/section-header";
 import { TabsContent } from "@/components/ui/tabs";
 import type { PublicUser } from "@/lib/auth-helpers";
 import { getErrorMessage } from "@/lib/utils";
@@ -121,14 +124,7 @@ export function SecurityTabPanel({
   return (
     <TabsContent value="security" className="m-0 outline-none">
       <div className="flex flex-col gap-7 px-6 py-6">
-        <div>
-          <h2 className="font-serif-display italic text-2xl text-title leading-[1.1] tracking-[-0.005em]">
-            Security
-          </h2>
-          <p className="mt-1 font-serif-body italic text-sm text-subtitle">
-            Manage your password and account security.
-          </p>
-        </div>
+        <SectionHeader title="Security" description="Manage your password and account security." />
 
         {isLoadingPasswordState && (
           <div className="flex flex-col gap-3">
@@ -153,13 +149,15 @@ export function SecurityTabPanel({
                 </p>
               </div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="auth-outline"
+              size="auth-sm"
+              className="text-[11px]"
               onClick={() => void hasPasswordQuery.refetch()}
-              className="shrink-0 cursor-pointer rounded-none border border-foreground bg-transparent px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] font-bold text-foreground transition-colors hover:bg-foreground hover:text-background"
             >
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
@@ -179,12 +177,9 @@ export function SecurityTabPanel({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="current-password"
-                className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-              >
+              <ProfileFieldLabel htmlFor="current-password">
                 Current Password
-              </label>
+              </ProfileFieldLabel>
               <div className="relative">
                 <Input
                   id="current-password"
@@ -217,12 +212,9 @@ export function SecurityTabPanel({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="new-password"
-                className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-              >
+              <ProfileFieldLabel htmlFor="new-password">
                 New Password
-              </label>
+              </ProfileFieldLabel>
               <div className="relative">
                 <Input
                   id="new-password"
@@ -254,21 +246,23 @@ export function SecurityTabPanel({
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
+              variant="auth"
+              size="auth-md"
+              className="sm:w-auto"
               disabled={
                 changePasswordMutation.isPending ||
                 !currentPassword ||
                 !newPassword
               }
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-none border border-foreground bg-foreground px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-background transition-colors hover:bg-accent hover:border-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
             >
               {changePasswordMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Change Password"
               )}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -294,18 +288,20 @@ export function SecurityTabPanel({
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="auth"
+              size="auth-md"
+              className="sm:w-auto"
               onClick={() => sendResetEmailMutation.mutate()}
               disabled={sendResetEmailMutation.isPending}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-none border border-foreground bg-foreground px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-background transition-colors hover:bg-accent hover:border-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
             >
               {sendResetEmailMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Send Reset Email"
               )}
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -12,16 +12,15 @@ import { forgotPassword } from "@/actions/auth";
 import { ROUTES } from "@/constants/routes";
 import { ForgotPasswordSchema } from "@/lib/zodSchema/auth-schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { AuthCard } from "@/components/form/auth-card";
+import { AuthFieldLabel, AuthInput } from "@/components/form/auth-field-label";
 import { ResendForgotPasswordButton } from "@/components/button/ResendForgotPasswordButton";
 import {
   Field,
   FieldContent,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 
 export function ForgotPasswordForm() {
   const formId = "forgot-password-form";
@@ -53,50 +52,48 @@ export function ForgotPasswordForm() {
     return (
       <>
         <div className="flex flex-col items-center w-full justify-center">
-          <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-            <CardContent className="p-0">
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-3">
-                  <MailCheck
-                    className="size-5 text-accent"
-                    aria-hidden="true"
-                  />
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                    Email sent
-                  </span>
-                </div>
-
-                <p className="font-serif-body italic text-sm text-subtitle">
-                  If an account exists for this email, we sent a password reset
-                  link to the inbox below.
-                </p>
-
-                <div className="flex flex-col gap-1">
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                    Sent to
-                  </span>
-                  <p className="border border-foreground bg-background px-3 py-2 font-mono text-sm text-foreground break-all">
-                    {submittedEmail}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-5 rounded-none transition-colors duration-150 shadow-none"
-                    onClick={() => {
-                      form.reset({ email: "" });
-                      setSubmittedEmail(null);
-                    }}
-                  >
-                    Try another email
-                  </Button>
-                  <ResendForgotPasswordButton email={submittedEmail} />
-                </div>
+          <AuthCard>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <MailCheck
+                  className="size-5 text-accent"
+                  aria-hidden="true"
+                />
+                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Email sent
+                </span>
               </div>
-            </CardContent>
-          </Card>
+
+              <p className="font-serif-body italic text-sm text-subtitle">
+                If an account exists for this email, we sent a password reset
+                link to the inbox below.
+              </p>
+
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Sent to
+                </span>
+                <p className="border border-foreground bg-background px-3 py-2 font-mono text-sm text-foreground break-all">
+                  {submittedEmail}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  type="button"
+                  variant="auth-outline"
+                  size="auth-lg"
+                  onClick={() => {
+                    form.reset({ email: "" });
+                    setSubmittedEmail(null);
+                  }}
+                >
+                  Try another email
+                </Button>
+                <ResendForgotPasswordButton email={submittedEmail} />
+              </div>
+            </div>
+          </AuthCard>
         </div>
       </>
     );
@@ -105,9 +102,8 @@ export function ForgotPasswordForm() {
   return (
     <>
       <div className="flex flex-col items-center w-full justify-center">
-        <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-          <CardContent className="p-0">
-            <form
+        <AuthCard>
+          <form
               id={formId}
               onSubmit={form.handleSubmit(handleSubmit)}
               className="flex flex-col gap-6"
@@ -118,21 +114,17 @@ export function ForgotPasswordForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid} className="gap-1">
-                      <FieldLabel
-                        htmlFor="forgot-password-email"
-                        className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
-                      >
+                      <AuthFieldLabel htmlFor="forgot-password-email">
                         Email
-                      </FieldLabel>
+                      </AuthFieldLabel>
                       <FieldContent>
-                        <Input
+                        <AuthInput
                           {...field}
                           id="forgot-password-email"
                           type="email"
                           aria-invalid={fieldState.invalid}
                           placeholder="Enter your email"
                           autoComplete="email"
-                          className="rounded-none border-foreground focus-visible:ring-0 focus-visible:border-accent text-foreground bg-background placeholder:text-muted-foreground/60 h-10 px-3"
                         />
                         {fieldState.invalid && (
                           <FieldError
@@ -148,7 +140,9 @@ export function ForgotPasswordForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-5 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground mt-2"
+                variant="auth"
+                size="auth-lg"
+                className="mt-2"
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? (
@@ -158,8 +152,7 @@ export function ForgotPasswordForm() {
                 )}
               </Button>
             </form>
-          </CardContent>
-        </Card>
+        </AuthCard>
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-2 w-full justify-center mt-6 text-center">
         <p className="text-sm font-serif-body italic text-muted-foreground">

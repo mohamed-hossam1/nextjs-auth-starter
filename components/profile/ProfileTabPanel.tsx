@@ -4,10 +4,12 @@ import { updateProfile } from "@/actions/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/profile/badge";
+import { ProfileFieldLabel } from "@/components/profile/field-label";
+import { SectionHeader } from "@/components/profile/section-header";
 import { getErrorMessage, getInitials } from "@/lib/utils";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import type { PublicUser } from "@/lib/auth-helpers";
-import type { SessionPayload } from "@/hooks/session";
+import type { AuthenticatedContext, PublicUser } from "@/lib/auth-helpers";
 import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,9 +34,9 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
       await queryClient.cancelQueries({ queryKey: sessionQueryKey });
 
       const previousSession =
-        queryClient.getQueryData<SessionPayload | null>(sessionQueryKey);
+        queryClient.getQueryData<AuthenticatedContext | null>(sessionQueryKey);
 
-      queryClient.setQueryData<SessionPayload | null>(
+      queryClient.setQueryData<AuthenticatedContext | null>(
         sessionQueryKey,
         (current) => {
           if (!current?.session || !current.user) return current;
@@ -94,14 +96,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
   return (
     <TabsContent value="profile" className="m-0 outline-none">
       <div className="flex flex-col gap-7 px-6 py-6">
-        <div>
-          <h2 className="font-serif-display italic text-2xl text-title leading-[1.1] tracking-[-0.005em]">
-            Profile
-          </h2>
-          <p className="mt-1 font-serif-body italic text-sm text-subtitle">
-            Manage your personal information.
-          </p>
-        </div>
+        <SectionHeader title="Profile" description="Manage your personal information." />
 
         <div className="flex flex-col gap-4 border border-foreground border-t-4 border-t-accent bg-card p-4 sm:flex-row sm:items-center">
           <Avatar className="h-16 w-16 shrink-0">
@@ -118,22 +113,19 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
               {user.email}
             </p>
             {user.emailVerified && (
-              <span className="mt-2 inline-flex items-center bg-accent px-1.5 py-[3px] font-mono text-[10px] tracking-[0.06em] uppercase text-accent-foreground">
-                Verified
-              </span>
+              <Badge className="mt-2">Verified</Badge>
             )}
           </div>
         </div>
 
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
-            <label
+            <ProfileFieldLabel
               htmlFor="profile-email"
-              className="flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+              icon={<Mail className="h-3 w-3" />}
             >
-              <Mail className="h-3 w-3" aria-hidden="true" />
               Email Address
-            </label>
+            </ProfileFieldLabel>
             <div
               id="profile-email"
               className="border border-foreground bg-background px-3 py-2 font-mono text-sm text-foreground break-all"
@@ -143,13 +135,12 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label
+            <ProfileFieldLabel
               htmlFor="profile-display-name"
-              className="flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+              icon={<UserIcon className="h-3 w-3" />}
             >
-              <UserIcon className="h-3 w-3" aria-hidden="true" />
               Display Name
-            </label>
+            </ProfileFieldLabel>
 
             {isEditingName ? (
               <form

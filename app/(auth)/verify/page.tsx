@@ -3,9 +3,10 @@ import Link from "next/link";
 import { MailCheck } from "lucide-react";
 
 import { ROUTES } from "@/constants/routes";
-import { Card, CardContent } from "@/components/ui/card";
+import { AuthCard } from "@/components/form/auth-card";
+import { buttonVariants } from "@/components/ui/button";
 
-import { ResendVerificationButton } from "../../../components/button/ResendVerificationButton";
+import { ResendVerificationButton } from "@/components/button/ResendVerificationButton";
 
 type VerifyPageProps = {
   searchParams: Promise<{
@@ -27,27 +28,25 @@ export default function VerifyPage({ searchParams }: VerifyPageProps) {
       </div>
 
       <div className="flex flex-col items-center w-full justify-center">
-        <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <MailCheck className="size-5 text-accent" aria-hidden="true" />
-                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Awaiting confirmation
-                </span>
-              </div>
-
-              <p className="font-serif-body italic text-sm text-subtitle">
-                Use the link in your inbox to confirm your email address. The
-                verification email can take a minute to arrive.
-              </p>
-
-              <Suspense fallback={null}>
-                <VerifyActions searchParams={searchParams} />
-              </Suspense>
+        <AuthCard>
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <MailCheck className="size-5 text-accent" aria-hidden="true" />
+              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                Awaiting confirmation
+              </span>
             </div>
-          </CardContent>
-        </Card>
+
+            <p className="font-serif-body italic text-sm text-subtitle">
+              Use the link in your inbox to confirm your email address. The
+              verification email can take a minute to arrive.
+            </p>
+
+            <Suspense fallback={null}>
+              <VerifyActions searchParams={searchParams} />
+            </Suspense>
+          </div>
+        </AuthCard>
       </div>
     </div>
   );
@@ -76,14 +75,14 @@ async function VerifyActions({ searchParams }: VerifyPageProps) {
         ) : (
           <Link
             href={ROUTES.LOGIN}
-            className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
+            className={buttonVariants({ variant: "auth", size: "auth-md" })}
           >
             Back to sign in
           </Link>
         )}
         <Link
           href={ROUTES.REGISTER}
-          className="w-full inline-flex items-center justify-center cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none transition-colors duration-150 shadow-none"
+          className={buttonVariants({ variant: "auth-outline", size: "auth-md" })}
         >
           Use another email
         </Link>

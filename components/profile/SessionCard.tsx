@@ -6,6 +6,8 @@ import {
   getBrowserInformation,
 } from "@/lib/visitorInfo/browserInfo";
 import type { PublicSession } from "@/lib/auth-helpers";
+import { Badge } from "@/components/profile/badge";
+import { Button } from "@/components/ui/button";
 import { cn, formatDate } from "@/lib/utils";
 
 export default function SessionCard({
@@ -52,9 +54,7 @@ export default function SessionCard({
             {label}
           </p>
           {isCurrent && (
-            <span className="inline-flex items-center bg-accent px-1.5 py-[3px] font-mono text-[10px] tracking-[0.06em] uppercase text-accent-foreground">
-              Current
-            </span>
+            <Badge>Current</Badge>
           )}
         </div>
         {signedInAt && (
@@ -65,15 +65,17 @@ export default function SessionCard({
       </div>
 
       {!isCurrent && onRevoke && (
-        <button
+        <Button
           type="button"
+          variant="auth-destructive"
+          size="auth-sm"
+          className="self-start px-2 py-1 text-[10px]"
           aria-label={`Revoke session: ${label}`}
           onClick={onRevoke}
           disabled={isRevoking}
-          className="shrink-0 cursor-pointer self-start rounded-none border border-destructive bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.18em] uppercase text-destructive transition-colors hover:bg-destructive hover:text-background disabled:pointer-events-none disabled:opacity-50"
         >
           {isRevoking ? "Revoking…" : "Revoke"}
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -40,19 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# vscode
-.vscode
-
 # ai
-.specify
-.opencode
-.agents
+.*
 skills-lock.json
-ask-me-todo.md
-DESIGN_SYSTEM.md
 CLAUDE.md
-opencode.json
-opencode-mcp
+opencode*
 
 # ignore redis db
 redis

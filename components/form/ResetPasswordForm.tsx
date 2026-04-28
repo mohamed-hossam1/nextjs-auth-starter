@@ -11,16 +11,15 @@ import { z } from "zod";
 import { resetPassword } from "@/actions/auth";
 import { ROUTES } from "@/constants/routes";
 import { ResetPasswordSchema } from "@/lib/zodSchema/auth-schema";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { AuthCard } from "@/components/form/auth-card";
+import { AuthFieldLabel, AuthInput } from "@/components/form/auth-field-label";
 import {
   Field,
   FieldContent,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 
 type ResetPasswordFormProps = {
   token: string;
@@ -60,43 +59,41 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
   if (isComplete) {
     return (
       <div className="flex flex-col items-center w-full justify-center">
-        <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle2
-                  className="size-5 text-accent"
-                  aria-hidden="true"
-                />
-                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                  {isSettingPassword ? "Password set" : "Password updated"}
-                </span>
-              </div>
+        <AuthCard>
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle2
+                className="size-5 text-accent"
+                aria-hidden="true"
+              />
+              <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                {isSettingPassword ? "Password set" : "Password updated"}
+              </span>
+            </div>
 
-              <p className="font-serif-body italic text-sm text-subtitle">
-                {isSettingPassword
-                  ? "Your password has been set. You can now sign in with it or continue using your social account."
-                  : "Your password was updated successfully. You can sign in with the new password now."}
-              </p>
+            <p className="font-serif-body italic text-sm text-subtitle">
+              {isSettingPassword
+                ? "Your password has been set. You can now sign in with it or continue using your social account."
+                : "Your password was updated successfully. You can sign in with the new password now."}
+            </p>
 
               {isSettingPassword ? (
                 <Link
                   href={`${ROUTES.ADMIN}?open=security`}
-                  className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
+                  className={buttonVariants({ variant: "auth", size: "auth-md" })}
                 >
                   Back to security settings
                 </Link>
               ) : (
                 <Link
                   href={ROUTES.LOGIN}
-                  className="w-full inline-flex items-center justify-center bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
+                  className={buttonVariants({ variant: "auth", size: "auth-md" })}
                 >
                   Go to sign in
                 </Link>
               )}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </AuthCard>
       </div>
     );
   }
@@ -104,8 +101,7 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
   return (
     <>
       <div className="flex flex-col items-center w-full justify-center">
-        <Card className="w-full max-w-md border border-foreground border-t-4 border-t-accent bg-card rounded-none shadow-none p-6 md:p-8">
-          <CardContent className="p-0">
+        <AuthCard>
             <form
               id={formId}
               onSubmit={form.handleSubmit(handleSubmit)}
@@ -117,21 +113,18 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid} className="gap-1">
-                      <FieldLabel
-                        htmlFor="reset-password"
-                        className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-1 block"
-                      >
+                      <AuthFieldLabel htmlFor="reset-password">
                         New password
-                      </FieldLabel>
+                      </AuthFieldLabel>
                       <FieldContent className="relative">
-                        <Input
+                        <AuthInput
                           {...field}
                           id="reset-password"
                           type={showPassword ? "text" : "password"}
                           aria-invalid={fieldState.invalid}
                           placeholder="Create a new password"
                           autoComplete="new-password"
-                          className="pr-10 rounded-none border-foreground focus-visible:ring-0 focus-visible:border-accent text-foreground bg-background placeholder:text-muted-foreground/60 h-10 px-3"
+                          className="pr-10"
                         />
 
                         <button
@@ -164,7 +157,8 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
               <div className="flex flex-col gap-3 mt-2">
                 <Button
                   type="submit"
-                  className="w-full bg-foreground text-background hover:bg-accent hover:text-white font-mono text-xs uppercase tracking-widest font-bold py-5 rounded-none cursor-pointer transition-colors duration-150 shadow-none border border-foreground"
+                  variant="auth"
+                  size="auth-lg"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? (
@@ -176,22 +170,21 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
                 {isSettingPassword ? (
                   <Link
                     href={`${ROUTES.ADMIN}?open=security`}
-                    className="w-full inline-flex items-center justify-center cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none transition-colors duration-150 shadow-none"
+                    className={buttonVariants({ variant: "auth-outline", size: "auth-md" })}
                   >
                     Cancel
                   </Link>
                 ) : (
                   <Link
                     href={ROUTES.LOGIN}
-                    className="w-full inline-flex items-center justify-center cursor-pointer border border-foreground hover:bg-foreground hover:text-background text-foreground bg-transparent font-mono text-xs uppercase tracking-widest font-bold py-3 rounded-none transition-colors duration-150 shadow-none"
+                    className={buttonVariants({ variant: "auth-outline", size: "auth-md" })}
                   >
                     Back to sign in
                   </Link>
                 )}
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </AuthCard>
       </div>
     </>
   );

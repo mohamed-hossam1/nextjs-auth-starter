@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { listSessionsPublic, revokeSessionById } from "@/actions/profile";
 import SessionCard from "@/components/profile/SessionCard";
+import { SectionHeader } from "@/components/profile/section-header";
+import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { getErrorMessage } from "@/lib/utils";
 import type { PublicSession } from "@/lib/auth-helpers";
@@ -73,14 +75,7 @@ export function SessionsTabPanel({
   return (
     <TabsContent value="sessions" className="m-0 outline-none">
       <div className="flex flex-col gap-7 px-6 py-6">
-        <div>
-          <h2 className="font-serif-display italic text-2xl text-title leading-[1.1] tracking-[-0.005em]">
-            Active Sessions
-          </h2>
-          <p className="mt-1 font-serif-body italic text-sm text-subtitle">
-            Manage devices where you are currently signed in.
-          </p>
-        </div>
+        <SectionHeader title="Active Sessions" description="Manage devices where you are currently signed in." />
 
         {sessionsQuery.isPending && sessionsQuery.data === undefined && (
           <div className="flex flex-col gap-2">
@@ -109,13 +104,15 @@ export function SessionsTabPanel({
                 </p>
               </div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="auth-outline"
+              size="auth-sm"
+              className="text-[11px]"
               onClick={() => void sessionsQuery.refetch()}
-              className="shrink-0 cursor-pointer rounded-none border border-foreground bg-transparent px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] font-bold text-foreground transition-colors hover:bg-foreground hover:text-background"
             >
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
