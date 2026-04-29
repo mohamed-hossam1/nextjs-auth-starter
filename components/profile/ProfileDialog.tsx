@@ -115,7 +115,11 @@ export function ProfileDialog({
               isOpen={isOpen}
               isActive={activeTab === "sessions"}
             />
-            <LinksTabPanel user={user} />
+            <LinksTabPanel
+              user={user}
+              isOpen={isOpen}
+              isActive={activeTab === "links"}
+            />
           </div>
         </Tabs>
       </DialogContent>

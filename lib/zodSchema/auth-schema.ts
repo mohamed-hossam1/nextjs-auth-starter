@@ -33,3 +33,13 @@ export const ForgotPasswordSchema = z.object({
 export const ResetPasswordSchema = z.object({
   password: PasswordRule,
 });
+
+export const SafeAccountSchema = z.object({
+  id: z.string(),
+  providerId: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type SafeAccount = z.infer<typeof SafeAccountSchema>;
+

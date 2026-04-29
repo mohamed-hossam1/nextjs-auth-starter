@@ -14,11 +14,20 @@ import { getErrorMessage } from "@/lib/utils";
 import type { PublicUser } from "@/lib/auth/auth-helpers";
 import { cn } from "@/lib/utils";
 
-export function LinksTabPanel({ user }: { user: PublicUser }) {
+export function LinksTabPanel({
+  user,
+  isOpen,
+  isActive,
+}: {
+  user: PublicUser;
+  isOpen: boolean;
+  isActive: boolean;
+}) {
   const queryClient = useQueryClient();
 
   const connectionsQuery = useQuery({
     queryKey: accountConnectionsQueryKey,
+    enabled: isOpen && isActive,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const result = await listUserAccounts();
@@ -198,6 +207,11 @@ export function LinksTabPanel({ user }: { user: PublicUser }) {
                     ? `Active · ${user.email}`
                     : "Not connected"}
                 </p>
+                {isGoogleConnected && accounts.length === 1 && (
+                  <p className="mt-1 text-[11px] text-destructive italic font-serif-body">
+                    Cannot disconnect your only sign-in method.
+                  </p>
+                )}
               </div>
 
               <Button
@@ -205,7 +219,8 @@ export function LinksTabPanel({ user }: { user: PublicUser }) {
                 variant={isGoogleConnected ? "auth-destructive" : "auth-outline"}
                 size="auth-sm"
                 className="px-3 py-1.5 text-[10px]"
-                disabled={isAnyMutationPending}
+                disabled={isAnyMutationPending || (isGoogleConnected && accounts.length === 1)}
+                title={isGoogleConnected && accounts.length === 1 ? "Cannot disconnect your only sign-in method." : undefined}
                 onClick={handleGoogleToggle}
               >
                 {isGoogleLoading ? (
@@ -263,6 +278,11 @@ export function LinksTabPanel({ user }: { user: PublicUser }) {
                     ? "Active · Connected"
                     : "Not connected"}
                 </p>
+                {isGithubConnected && accounts.length === 1 && (
+                  <p className="mt-1 text-[11px] text-destructive italic font-serif-body">
+                    Cannot disconnect your only sign-in method.
+                  </p>
+                )}
               </div>
 
               <Button
@@ -270,7 +290,8 @@ export function LinksTabPanel({ user }: { user: PublicUser }) {
                 variant={isGithubConnected ? "auth-destructive" : "auth-outline"}
                 size="auth-sm"
                 className="px-3 py-1.5 text-[10px]"
-                disabled={isAnyMutationPending}
+                disabled={isAnyMutationPending || (isGithubConnected && accounts.length === 1)}
+                title={isGithubConnected && accounts.length === 1 ? "Cannot disconnect your only sign-in method." : undefined}
                 onClick={handleGithubToggle}
               >
                 {isGithubLoading ? (
