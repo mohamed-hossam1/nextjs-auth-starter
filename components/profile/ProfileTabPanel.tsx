@@ -9,8 +9,15 @@ import { ProfileFieldLabel } from "@/components/profile/field-label";
 import { SectionHeader } from "@/components/profile/section-header";
 import { getErrorMessage, getInitials } from "@/lib/utils";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import type { AuthenticatedContext, PublicUser } from "@/lib/auth-helpers";
-import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
+import type { AuthenticatedContext, PublicUser } from "@/lib/auth/auth-helpers";
+import {
+  Check,
+  Loader2,
+  Mail,
+  Pencil,
+  User as UserIcon,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -25,7 +32,9 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
       const result = await updateProfile({ name: nextName });
 
       if (result?.serverError) {
-        throw new Error(result.serverError!.message || "Failed to update your profile.");
+        throw new Error(
+          result.serverError!.message || "Failed to update your profile.",
+        );
       }
 
       return nextName;
@@ -96,7 +105,10 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
   return (
     <TabsContent value="profile" className="m-0 outline-none">
       <div className="flex flex-col gap-7 p-6">
-        <SectionHeader title="Profile" description="Manage your personal information." />
+        <SectionHeader
+          title="Profile"
+          description="Manage your personal information."
+        />
 
         <div className="flex flex-col gap-4 border border-foreground border-t-4 border-t-accent bg-card p-4 sm:flex-row sm:items-center">
           <Avatar className="size-16 shrink-0">
@@ -112,9 +124,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
             <p className="mt-1 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               {user.email}
             </p>
-            {user.emailVerified && (
-              <Badge className="mt-2">Verified</Badge>
-            )}
+            {user.emailVerified && <Badge className="mt-2">Verified</Badge>}
           </div>
         </div>
 
@@ -122,7 +132,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-email"
-                icon={<Mail className="size-3" />}
+              icon={<Mail className="size-3" />}
             >
               Email Address
             </ProfileFieldLabel>
@@ -137,7 +147,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-display-name"
-                icon={<UserIcon className="size-3" />}
+              icon={<UserIcon className="size-3" />}
             >
               Display Name
             </ProfileFieldLabel>

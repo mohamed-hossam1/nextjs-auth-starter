@@ -7,7 +7,7 @@ import { VisuallyHidden } from "radix-ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { LogOut } from "lucide-react";
-import type { PublicSession, PublicUser } from "@/lib/auth-helpers";
+import type { PublicSession, PublicUser } from "@/lib/auth/auth-helpers";
 import {
   parseProfileDialogTab,
   type ProfileDialogTab,
@@ -16,6 +16,7 @@ import { ProfileTabPanel } from "./ProfileTabPanel";
 import { ProfileTabsList } from "./ProfileTabsList";
 import { SecurityTabPanel } from "./SecurityTabPanel";
 import { SessionsTabPanel } from "./SessionsTabPanel";
+import { LinksTabPanel } from "./LinksTabPanel";
 
 export function ProfileDialog({
   user,
@@ -40,9 +41,7 @@ export function ProfileDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex h-[min(680px,calc(100dvh-2rem))] max-w-[920px] flex-col gap-0 overflow-hidden rounded-none border border-foreground bg-card p-0 ring-0 shadow-none sm:max-w-[920px]"
-      >
+      <DialogContent className="flex h-[min(680px,calc(100dvh-2rem))] max-w-[920px] flex-col gap-0 overflow-hidden rounded-none border border-foreground bg-card p-0 ring-0 shadow-none sm:max-w-[920px]">
         <VisuallyHidden.Root>
           <DialogTitle>Account Settings</DialogTitle>
         </VisuallyHidden.Root>
@@ -116,6 +115,7 @@ export function ProfileDialog({
               isOpen={isOpen}
               isActive={activeTab === "sessions"}
             />
+            <LinksTabPanel user={user} />
           </div>
         </Tabs>
       </DialogContent>

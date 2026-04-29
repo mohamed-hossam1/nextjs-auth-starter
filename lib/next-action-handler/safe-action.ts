@@ -11,15 +11,14 @@ import { logActionError, logActionExecution } from "./log/logger";
 
 import { normalizeError } from "./error/normalize-error";
 import { InternalServerError } from "./error/errors";
-import { requireUser } from "../auth-helpers";
+import { requireUser } from "../auth/auth-helpers";
 
 const OUTPUT_VALIDATION_SERVER_ERROR_MESSAGE =
   "Unexpected response. Please try again.";
 
 function isActionOutputDataValidationError(error: unknown): error is Error {
   return (
-    error instanceof Error &&
-    error.name === "ActionOutputDataValidationError"
+    error instanceof Error && error.name === "ActionOutputDataValidationError"
   );
 }
 

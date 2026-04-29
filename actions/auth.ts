@@ -8,7 +8,7 @@ import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { db } from "@/db";
 import { user as userTable } from "@/db/schema/auth-schema";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { actionClient } from "@/lib/next-action-handler/safe-action";
 
 import {
@@ -19,7 +19,7 @@ import {
 import { fromBetterAuthError } from "@/lib/next-action-handler/error/better-auth-error";
 import { logError } from "@/lib/next-action-handler/log/logger";
 
-import { isValidateEmail } from "@/lib/email-validation";
+import { isValidateEmail } from "@/lib/auth/email-validation";
 import {
   ForgotPasswordSchema,
   LoginSchema,
@@ -113,6 +113,76 @@ export const signInWithGoogle = actionClient
     } catch (error) {
       throw fromBetterAuthError(error, {
         genericMessage: GENERIC_AUTH_ERROR,
+      });
+    }
+  });
+
+export const signInWithGithub = actionClient
+  .metadata({ actionName: "auth.signInWithGithub" })
+  .action(async () => {
+    try {
+      return await auth.api.signInSocial({
+        headers: await headers(),
+        body: {
+          provider: "github",
+          callbackURL: ROUTES.ADMIN,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: GENERIC_AUTH_ERROR,
+      });
+    }
+  });
+
+export const listUserAccounts = actionClient
+  .metadata({ actionName: "auth.listUserAccounts" })
+  .action(async () => {
+    try {
+      return await auth.api.listUserAccounts({
+        headers: await headers(),
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: "Failed to load linked accounts.",
+      });
+    }
+  });
+
+export const unLinkAccount = actionClient
+  .metadata({ actionName: "auth.unlinkAccount" })
+  .inputSchema(z.object({ providerId: z.string() }))
+  .action(async ({ parsedInput }) => {
+    try {
+      return await auth.api.unlinkAccount({
+        headers: await headers(),
+        body: {
+          providerId: parsedInput.providerId,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        suppressExpectedActionLog: false,
+      });
+    }
+  });
+
+export const linkAccount = actionClient
+  .metadata({ actionName: "auth.linkAccount" })
+  .inputSchema(z.object({ provider: z.string() }))
+  .action(async ({ parsedInput }) => {
+    try {
+      return await auth.api.linkSocialAccount({
+        headers: await headers(),
+        body: {
+          provider: parsedInput.provider,
+          callbackURL: `${ROUTES.ADMIN}?open=links`,
+          errorCallbackURL: `${ROUTES.ADMIN}?open=links`,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: "Failed to link account.",
       });
     }
   });

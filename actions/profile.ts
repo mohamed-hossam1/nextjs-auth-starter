@@ -5,14 +5,14 @@ import { z } from "zod";
 
 import { ROUTES } from "@/constants/routes";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 
 import {
   type PublicSession,
   getSession,
   requireSession,
   toPublicSession,
-} from "@/lib/auth-helpers";
+} from "@/lib/auth/auth-helpers";
 
 import {
   actionClient,
