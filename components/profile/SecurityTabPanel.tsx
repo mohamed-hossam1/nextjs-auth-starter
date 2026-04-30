@@ -1,6 +1,13 @@
 "use client";
 
-import { AlertCircle, Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
+import {
+  AlertCircle,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Mail,
+} from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -15,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { ProfileFieldLabel } from "@/components/profile/field-label";
 import { SectionHeader } from "@/components/profile/section-header";
 import { TabsContent } from "@/components/ui/tabs";
-import type { PublicUser } from "@/lib/auth-helpers";
+import type { PublicUser } from "@/lib/auth/auth-helpers";
 import { getErrorMessage } from "@/lib/utils";
 import { accountHasPasswordQueryKey } from "@/lib/reactQuery/query-keys";
 
@@ -42,7 +49,8 @@ export function SecurityTabPanel({
       const result = await hasPassword();
       if (result?.serverError) {
         throw new Error(
-          result.serverError?.message || "Failed to load your security settings.",
+          result.serverError?.message ||
+            "Failed to load your security settings.",
         );
       }
       return Boolean(result?.data);
@@ -56,7 +64,9 @@ export function SecurityTabPanel({
     }) => {
       const result = await changePassword(formData);
       if (result?.serverError) {
-        throw new Error(result.serverError?.message || "Failed to change your password.");
+        throw new Error(
+          result.serverError?.message || "Failed to change your password.",
+        );
       }
     },
     onSuccess: () => {
@@ -79,7 +89,8 @@ export function SecurityTabPanel({
       const result = await sendCurrentUserPasswordResetEmail();
       if (result?.serverError) {
         throw new Error(
-          result.serverError?.message || "Failed to send the password reset email.",
+          result.serverError?.message ||
+            "Failed to send the password reset email.",
         );
       }
     },
@@ -127,7 +138,10 @@ export function SecurityTabPanel({
   return (
     <TabsContent value="security" className="m-0 outline-none">
       <div className="flex flex-col gap-7 p-6">
-        <SectionHeader title="Security" description="Manage your password and account security." />
+        <SectionHeader
+          title="Security"
+          description="Manage your password and account security."
+        />
 
         {isLoadingPasswordState && (
           <div className="flex flex-col gap-3">
@@ -165,10 +179,7 @@ export function SecurityTabPanel({
         )}
 
         {hasPasswordQuery.data === true && (
-          <form
-            onSubmit={handleChangePassword}
-            className="flex flex-col gap-5"
-          >
+          <form onSubmit={handleChangePassword} className="flex flex-col gap-5">
             <div className="flex items-center gap-3 border border-border bg-card px-3 py-2.5">
               <KeyRound
                 className="size-4 shrink-0 text-foreground"
@@ -234,9 +245,7 @@ export function SecurityTabPanel({
                   onClick={() => setShowNewPassword((value) => !value)}
                   className="absolute inset-y-0 right-3 flex cursor-pointer items-center text-subtitle transition-colors hover:text-foreground"
                   aria-label={
-                    showNewPassword
-                      ? "Hide new password"
-                      : "Show new password"
+                    showNewPassword ? "Hide new password" : "Show new password"
                   }
                   aria-pressed={showNewPassword}
                 >

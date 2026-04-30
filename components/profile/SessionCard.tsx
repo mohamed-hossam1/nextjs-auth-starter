@@ -1,8 +1,11 @@
 "use client";
 
-import { getBrowserInfo, getBrowserInformation } from "@/lib/visitorInfo/browserInfo";
+import {
+  getBrowserInfo,
+  getBrowserInformation,
+} from "@/lib/visitorInfo/browserInfo";
 import { DeviceIcon } from "@/lib/visitorInfo/DeviceIcon";
-import type { PublicSession } from "@/lib/auth-helpers";
+import type { PublicSession } from "@/lib/auth/auth-helpers";
 import { Badge } from "@/components/profile/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatDate } from "@/lib/utils";
@@ -50,9 +53,7 @@ export default function SessionCard({
           <p className="truncate font-serif-body text-sm text-foreground">
             {label}
           </p>
-          {isCurrent && (
-            <Badge>Current</Badge>
-          )}
+          {isCurrent && <Badge>Current</Badge>}
         </div>
         {signedInAt && (
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">

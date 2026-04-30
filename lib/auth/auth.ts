@@ -4,11 +4,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 
 import { db } from "@/db";
-import { sendEmailVerificationEmail } from "./emails/verification-email";
-import { sendPasswordResetEmail } from "./emails/password-reset-email";
-import { sendWelcomeEmail } from "./emails/send_welcome_email";
-import { serverEnv } from "./env";
-import { logError, logInfo, logWarn } from "./next-action-handler/log/logger";
+import { sendEmailVerificationEmail } from "../emails/verification-email";
+import { sendPasswordResetEmail } from "../emails/password-reset-email";
+import { sendWelcomeEmail } from "../emails/send_welcome_email";
+import { serverEnv } from "../env";
+import { logError, logInfo, logWarn } from "../next-action-handler/log/logger";
 
 const env = serverEnv();
 
@@ -53,7 +53,20 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   logger: authLogger,
 
+  account: {
+    accountLinking: {
+      allowUnlinkingAll: false,
+    },
+  },
+
+  pages: {
+    error: "/admin",
+  },
+
   user: {
+    deleteUser: {
+      enabled: true,
+    },
     changeEmail: {
       enabled: true,
       sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
@@ -93,6 +106,14 @@ export const auth = betterAuth({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
+    ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+      ? {
+          github: {
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
+          },
+        }
+      : {}),
   },
 
   session: {

@@ -2,6 +2,7 @@ const PROFILE_DIALOG_TABS = [
   "profile",
   "security",
   "sessions",
+  "links",
 ] as const;
 
 export type ProfileDialogTab = (typeof PROFILE_DIALOG_TABS)[number];

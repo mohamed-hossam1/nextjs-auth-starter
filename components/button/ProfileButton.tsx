@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { PublicUser } from "@/lib/auth-helpers";
+import type { PublicUser } from "@/lib/auth/auth-helpers";
 import { cn, getInitials } from "@/lib/utils";
 
 export function ProfileButton({

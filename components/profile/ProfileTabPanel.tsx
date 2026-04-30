@@ -1,7 +1,16 @@
 "use client";
 
-import { updateProfile } from "@/actions/profile";
+import { deleteAccount, updateProfile } from "@/actions/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/profile/badge";
@@ -9,23 +18,38 @@ import { ProfileFieldLabel } from "@/components/profile/field-label";
 import { SectionHeader } from "@/components/profile/section-header";
 import { getErrorMessage, getInitials } from "@/lib/utils";
 import { sessionQueryKey } from "@/lib/reactQuery/query-keys";
-import type { AuthenticatedContext, PublicUser } from "@/lib/auth-helpers";
-import { Check, Loader2, Mail, Pencil, User as UserIcon, X } from "lucide-react";
+import type { AuthenticatedContext, PublicUser } from "@/lib/auth/auth-helpers";
+import {
+  AlertTriangle,
+  Check,
+  Loader2,
+  Mail,
+  Pencil,
+  Trash2,
+  User as UserIcon,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+const DELETE_CONFIRMATION_PHRASE = "DELETE";
 
 export function ProfileTabPanel({ user }: { user: PublicUser }) {
   const queryClient = useQueryClient();
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(user.name);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const updateProfileMutation = useMutation({
     mutationFn: async (nextName: string) => {
       const result = await updateProfile({ name: nextName });
 
       if (result?.serverError) {
-        throw new Error(result.serverError!.message || "Failed to update your profile.");
+        throw new Error(
+          result.serverError!.message || "Failed to update your profile.",
+        );
       }
 
       return nextName;
@@ -67,6 +91,27 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
     },
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const result = await deleteAccount();
+
+      if (result?.serverError) {
+        throw new Error(
+          result.serverError?.message || "Failed to delete your account.",
+        );
+      }
+    },
+    onSuccess: () => {
+      setIsDeleteDialogOpen(false);
+      window.location.href = "/";
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error), {
+        position: "top-center",
+      });
+    },
+  });
+
   const initials = getInitials(user);
 
   function handleCancelName() {
@@ -93,10 +138,24 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
     updateProfileMutation.mutate(trimmedName);
   }
 
+  function handleDeleteDialogOpenChange(open: boolean) {
+    setIsDeleteDialogOpen(open);
+
+    if (!open) {
+      setDeleteConfirmation("");
+    }
+  }
+
+  const isDeleteConfirmed =
+    deleteConfirmation.trim().toUpperCase() === DELETE_CONFIRMATION_PHRASE;
+
   return (
     <TabsContent value="profile" className="m-0 outline-none">
       <div className="flex flex-col gap-7 p-6">
-        <SectionHeader title="Profile" description="Manage your personal information." />
+        <SectionHeader
+          title="Profile"
+          description="Manage your personal information."
+        />
 
         <div className="flex flex-col gap-4 border border-foreground border-t-4 border-t-accent bg-card p-4 sm:flex-row sm:items-center">
           <Avatar className="size-16 shrink-0">
@@ -112,9 +171,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
             <p className="mt-1 truncate font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               {user.email}
             </p>
-            {user.emailVerified && (
-              <Badge className="mt-2">Verified</Badge>
-            )}
+            {user.emailVerified && <Badge className="mt-2">Verified</Badge>}
           </div>
         </div>
 
@@ -122,7 +179,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-email"
-                icon={<Mail className="size-3" />}
+              icon={<Mail className="size-3" />}
             >
               Email Address
             </ProfileFieldLabel>
@@ -137,7 +194,7 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
           <div className="flex flex-col gap-1.5">
             <ProfileFieldLabel
               htmlFor="profile-display-name"
-                icon={<UserIcon className="size-3" />}
+              icon={<UserIcon className="size-3" />}
             >
               Display Name
             </ProfileFieldLabel>
@@ -201,7 +258,142 @@ export function ProfileTabPanel({ user }: { user: PublicUser }) {
             )}
           </div>
         </div>
+
+        {/* Danger Zone — Delete Account */}
+        <div className="mt-3 flex flex-col gap-4">
+          <div
+            className="h-px w-full bg-border"
+            aria-hidden="true"
+          />
+
+          <div>
+            <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-destructive">
+              Danger Zone
+            </h3>
+            <p className="mt-1 font-serif-body italic text-sm text-subtitle">
+              Permanently delete your account and all associated data.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 border border-destructive bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle
+                className="mt-0.5 size-5 shrink-0 text-destructive"
+                aria-hidden="true"
+              />
+              <div className="flex-1">
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">
+                  Delete account
+                </p>
+                <p className="mt-1 font-serif-body italic text-sm text-subtitle">
+                  This action is irreversible. All your data, sessions, and
+                  linked accounts will be permanently removed.
+                </p>
+              </div>
+            </div>
+
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={handleDeleteDialogOpenChange}
+            >
+              <Button
+                id="delete-account-trigger"
+                type="button"
+                variant="auth-destructive"
+                size="auth-sm"
+                className="sm:w-auto sm:self-end"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+                Delete Account
+              </Button>
+
+              <AlertDialogContent>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center border border-destructive bg-destructive/10">
+                      <AlertTriangle
+                        className="size-5 text-destructive"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div>
+                      <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                      <AlertDialogDescription className="mt-1">
+                        This will permanently delete your account, all sessions,
+                        and linked providers. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label
+                      htmlFor="delete-confirmation"
+                      className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                    >
+                      Type{" "}
+                      <span className="text-destructive">
+                        {DELETE_CONFIRMATION_PHRASE}
+                      </span>{" "}
+                      to confirm
+                    </label>
+                    <Input
+                      id="delete-confirmation"
+                      value={deleteConfirmation}
+                      onChange={(event) =>
+                        setDeleteConfirmation(event.target.value)
+                      }
+                      autoComplete="off"
+                      placeholder={DELETE_CONFIRMATION_PHRASE}
+                      disabled={deleteAccountMutation.isPending}
+                      className="h-10 rounded-none border-foreground bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:border-destructive focus-visible:ring-0"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <AlertDialogCancel asChild>
+                      <Button
+                        type="button"
+                        variant="auth-outline"
+                        size="auth-sm"
+                        disabled={deleteAccountMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button
+                        id="delete-account-confirm"
+                        type="button"
+                        variant="auth-destructive"
+                        size="auth-sm"
+                        disabled={
+                          !isDeleteConfirmed ||
+                          deleteAccountMutation.isPending
+                        }
+                        onClick={(event) => {
+                          event.preventDefault();
+                          deleteAccountMutation.mutate();
+                        }}
+                      >
+                        {deleteAccountMutation.isPending ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Trash2 className="size-4" aria-hidden="true" />
+                            Delete Permanently
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogAction>
+                  </div>
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
       </div>
     </TabsContent>
   );
 }
+

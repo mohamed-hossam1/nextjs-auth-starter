@@ -8,8 +8,8 @@ import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { db } from "@/db";
 import { user as userTable } from "@/db/schema/auth-schema";
-import { auth } from "@/lib/auth";
-import { actionClient } from "@/lib/next-action-handler/safe-action";
+import { auth } from "@/lib/auth/auth";
+import { actionClient, authedActionClient } from "@/lib/next-action-handler/safe-action";
 
 import {
   BadRequestError,
@@ -19,12 +19,13 @@ import {
 import { fromBetterAuthError } from "@/lib/next-action-handler/error/better-auth-error";
 import { logError } from "@/lib/next-action-handler/log/logger";
 
-import { isValidateEmail } from "@/lib/email-validation";
+import { isValidateEmail } from "@/lib/auth/email-validation";
 import {
   ForgotPasswordSchema,
   LoginSchema,
   RegisterSchema,
   ResetPasswordSchema,
+  SafeAccountSchema,
 } from "@/lib/zodSchema/auth-schema";
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
@@ -113,6 +114,98 @@ export const signInWithGoogle = actionClient
     } catch (error) {
       throw fromBetterAuthError(error, {
         genericMessage: GENERIC_AUTH_ERROR,
+      });
+    }
+  });
+
+export const signInWithGithub = actionClient
+  .metadata({ actionName: "auth.signInWithGithub" })
+  .action(async () => {
+    try {
+      return await auth.api.signInSocial({
+        headers: await headers(),
+        body: {
+          provider: "github",
+          callbackURL: ROUTES.ADMIN,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: GENERIC_AUTH_ERROR,
+      });
+    }
+  });
+
+export const listUserAccounts = authedActionClient
+  .metadata({ actionName: "auth.listUserAccounts" })
+  .outputSchema(z.array(SafeAccountSchema))
+  .action(async () => {
+    try {
+      const accounts = await auth.api.listUserAccounts({
+        headers: await headers(),
+      });
+
+      return accounts.map((acc) => ({
+        id: acc.id,
+        providerId: acc.providerId,
+        createdAt: acc.createdAt.toISOString(),
+        updatedAt: acc.updatedAt.toISOString(),
+      }));
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: "Failed to load linked accounts.",
+      });
+    }
+  });
+
+export const unLinkAccount = authedActionClient
+  .metadata({ actionName: "auth.unlinkAccount" })
+  .inputSchema(z.object({ providerId: z.string() }))
+  .action(async ({ parsedInput }) => {
+    const userAccounts = await auth.api.listUserAccounts({
+      headers: await headers(),
+    });
+
+    const remainingAccounts = userAccounts.filter(
+      (account) => account.providerId !== parsedInput.providerId,
+    );
+
+    if (remainingAccounts.length === 0) {
+      throw new BadRequestError(
+        "Cannot disconnect the last remaining sign-in method. You must set up another sign-in method first.",
+      );
+    }
+
+    try {
+      return await auth.api.unlinkAccount({
+        headers: await headers(),
+        body: {
+          providerId: parsedInput.providerId,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        suppressExpectedActionLog: false,
+      });
+    }
+  });
+
+export const linkAccount = authedActionClient
+  .metadata({ actionName: "auth.linkAccount" })
+  .inputSchema(z.object({ provider: z.string() }))
+  .action(async ({ parsedInput }) => {
+    try {
+      return await auth.api.linkSocialAccount({
+        headers: await headers(),
+        body: {
+          provider: parsedInput.provider,
+          callbackURL: `${ROUTES.ADMIN}?open=links`,
+          errorCallbackURL: `${ROUTES.ADMIN}?open=links`,
+        },
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error, {
+        genericMessage: "Failed to link account.",
       });
     }
   });

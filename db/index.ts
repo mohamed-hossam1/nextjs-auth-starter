@@ -1,4 +1,4 @@
-import "server-only";
+// Server guard: serverEnv() below throws if this module is loaded on the client.
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { serverEnv } from "@/lib/env";

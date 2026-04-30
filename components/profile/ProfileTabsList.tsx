@@ -2,7 +2,7 @@
 
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ProfileDialogTab } from "@/lib/profile-dialog";
-import { Monitor, ShieldCheck, User } from "lucide-react";
+import { Monitor, ShieldCheck, User, Link } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const tabs: Array<{
@@ -13,6 +13,7 @@ const tabs: Array<{
   { value: "profile", label: "Profile", icon: User },
   { value: "security", label: "Security", icon: ShieldCheck },
   { value: "sessions", label: "Sessions", icon: Monitor },
+  { value: "links", label: "Links", icon: Link },
 ];
 
 export function ProfileTabsList() {

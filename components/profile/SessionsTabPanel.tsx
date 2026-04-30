@@ -10,7 +10,7 @@ import { SectionHeader } from "@/components/profile/section-header";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { getErrorMessage } from "@/lib/utils";
-import type { PublicSession } from "@/lib/auth-helpers";
+import type { PublicSession } from "@/lib/auth/auth-helpers";
 import { accountSessionsQueryKey } from "@/lib/reactQuery/query-keys";
 
 export function SessionsTabPanel({
@@ -31,7 +31,9 @@ export function SessionsTabPanel({
     queryFn: async (): Promise<PublicSession[]> => {
       const result = await listSessionsPublic();
       if (result?.serverError) {
-        throw new Error(result.serverError?.message || "Failed to load active sessions.");
+        throw new Error(
+          result.serverError?.message || "Failed to load active sessions.",
+        );
       }
       return result?.data ?? [];
     },
@@ -41,7 +43,9 @@ export function SessionsTabPanel({
     mutationFn: async ({ sessionId }: { sessionId: string }) => {
       const result = await revokeSessionById({ sessionId });
       if (result?.serverError) {
-        throw new Error(result.serverError?.message || "Failed to revoke the session.");
+        throw new Error(
+          result.serverError?.message || "Failed to revoke the session.",
+        );
       }
       return { sessionId };
     },
@@ -75,7 +79,10 @@ export function SessionsTabPanel({
   return (
     <TabsContent value="sessions" className="m-0 outline-none">
       <div className="flex flex-col gap-7 p-6">
-        <SectionHeader title="Active Sessions" description="Manage devices where you are currently signed in." />
+        <SectionHeader
+          title="Active Sessions"
+          description="Manage devices where you are currently signed in."
+        />
 
         {sessionsQuery.isPending && sessionsQuery.data === undefined && (
           <div className="flex flex-col gap-2">

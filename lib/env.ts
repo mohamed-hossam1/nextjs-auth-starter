@@ -33,6 +33,8 @@ let serverEnvCache: {
   BETTER_AUTH_URL: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
   PINGRAM_API_KEY: string;
   PINGRAM_BASE_URL: string;
   NODE_ENV: "development" | "test" | "production";
@@ -64,6 +66,14 @@ function getServerEnv() {
       "GOOGLE_CLIENT_SECRET",
       process.env.GOOGLE_CLIENT_SECRET,
     ),
+    GITHUB_CLIENT_ID:
+      process.env.GITHUB_CLIENT_ID?.trim() || process.env.GITHUB_CLIENT_SECRET?.trim()
+        ? readRequired("GITHUB_CLIENT_ID", process.env.GITHUB_CLIENT_ID)
+        : undefined,
+    GITHUB_CLIENT_SECRET:
+      process.env.GITHUB_CLIENT_ID?.trim() || process.env.GITHUB_CLIENT_SECRET?.trim()
+        ? readRequired("GITHUB_CLIENT_SECRET", process.env.GITHUB_CLIENT_SECRET)
+        : undefined,
     PINGRAM_API_KEY: readRequired(
       "PINGRAM_API_KEY",
       process.env.PINGRAM_API_KEY,

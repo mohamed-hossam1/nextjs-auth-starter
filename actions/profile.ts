@@ -5,14 +5,14 @@ import { z } from "zod";
 
 import { ROUTES } from "@/constants/routes";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 
 import {
   type PublicSession,
   getSession,
   requireSession,
   toPublicSession,
-} from "@/lib/auth-helpers";
+} from "@/lib/auth/auth-helpers";
 
 import {
   actionClient,
@@ -168,6 +168,21 @@ export const revokeSessionById = authedActionClient
         throw error;
       }
 
+      throw fromBetterAuthError(error);
+    }
+  });
+
+export const deleteAccount = authedActionClient
+  .metadata({
+    actionName: "profile:deleteAccount",
+  })
+  .action(async () => {
+    try {
+      await auth.api.deleteUser({
+        headers: await headers(),
+        body: {},
+      });
+    } catch (error) {
       throw fromBetterAuthError(error);
     }
   });

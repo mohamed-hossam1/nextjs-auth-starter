@@ -9,3 +9,7 @@ export const accountSessionsQueryKey = [
   ...accountQueryKey,
   "sessions",
 ] as const;
+export const accountConnectionsQueryKey = [
+  ...accountQueryKey,
+  "connections",
+] as const;

@@ -1,4 +1,4 @@
-import "server-only";
+
 
 import { pingram, type EmailRecipient } from "./send-email";
 

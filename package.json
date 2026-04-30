@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "lint": "eslint",
     "test:integration": "bun --env-file=.env.local run tests/integration/action-errors/runner.ts",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "auth:generate": "bun run scripts/auth-generate.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
