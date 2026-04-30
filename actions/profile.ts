@@ -171,3 +171,18 @@ export const revokeSessionById = authedActionClient
       throw fromBetterAuthError(error);
     }
   });
+
+export const deleteAccount = authedActionClient
+  .metadata({
+    actionName: "profile:deleteAccount",
+  })
+  .action(async () => {
+    try {
+      await auth.api.deleteUser({
+        headers: await headers(),
+        body: {},
+      });
+    } catch (error) {
+      throw fromBetterAuthError(error);
+    }
+  });
