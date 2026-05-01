@@ -7,7 +7,7 @@ const SESSION_COOKIE_NAMES = [
   "__Secure-better-auth.session_token",
 ] as const;
 
-const PROTECTED_PREFIXES = [ROUTES.ADMIN] as const;
+const PROTECTED_PREFIXES = [ROUTES.DASHBOARD] as const;
 const AUTH_PREFIXES = [
   ROUTES.LOGIN,
   ROUTES.REGISTER,
@@ -64,7 +64,7 @@ export function proxy(request: NextRequest) {
       const isTrustedNavigation =
         !fetchSite || fetchSite === "same-origin" || fetchSite === "none";
       if (!isTrustedNavigation) {
-        return NextResponse.redirect(new URL(ROUTES.ADMIN, request.url));
+        return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
       }
       return clearSessionCookies(NextResponse.next());
     }
@@ -74,7 +74,7 @@ export function proxy(request: NextRequest) {
       searchParams.has("type") ||
       pathname.startsWith(ROUTES.VERIFY);
     if (!hasOptIn) {
-      return NextResponse.redirect(new URL(ROUTES.ADMIN, request.url));
+      return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
     }
   }
 
@@ -83,7 +83,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
+    "/dashboard/:path*",
     "/login",
     "/register",
     "/forgot-password",

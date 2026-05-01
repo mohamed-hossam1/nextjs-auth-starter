@@ -34,17 +34,17 @@ type AuthFormProps = {
 };
 
 function resolveNextRedirect(raw: string | null): string {
-  if (!raw) return ROUTES.ADMIN;
-  if (!raw.startsWith("/")) return ROUTES.ADMIN;
-  if (raw.startsWith("//") || raw.startsWith("/\\")) return ROUTES.ADMIN;
-  if (raw.includes("\\")) return ROUTES.ADMIN;
+  if (!raw) return ROUTES.DASHBOARD;
+  if (!raw.startsWith("/")) return ROUTES.DASHBOARD;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return ROUTES.DASHBOARD;
+  if (raw.includes("\\")) return ROUTES.DASHBOARD;
   if (
     raw === ROUTES.LOGIN ||
     raw === ROUTES.REGISTER ||
     raw.startsWith(`${ROUTES.LOGIN}?`) ||
     raw.startsWith(`${ROUTES.REGISTER}?`)
   ) {
-    return ROUTES.ADMIN;
+    return ROUTES.DASHBOARD;
   }
   return raw;
 }

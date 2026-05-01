@@ -17,7 +17,7 @@ export async function sendWelcomeEmail({ user }: SendWelcomeEmailArgs) {
     },
     parameters: {
       user_name: user.name?.trim() || "there",
-      dashboard_url: `${publicEnv.appUrl}${ROUTES.ADMIN}`,
+      dashboard_url: `${publicEnv.appUrl}${ROUTES.DASHBOARD}`,
     },
     templateId: "welcome_email",
   });

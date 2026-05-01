@@ -9,6 +9,7 @@ import { sendPasswordResetEmail } from "../emails/password-reset-email";
 import { sendWelcomeEmail } from "../emails/send_welcome_email";
 import { serverEnv } from "../env";
 import { logError, logInfo, logWarn } from "../next-action-handler/log/logger";
+import { ROUTES } from "@/constants/routes";
 
 const env = serverEnv();
 
@@ -60,7 +61,7 @@ export const auth = betterAuth({
   },
 
   pages: {
-    error: "/admin",
+    error: `${ROUTES.DASHBOARD}`,
   },
 
   user: {

@@ -63,7 +63,7 @@ export const register = actionClient
           name: parsedInput.name,
           email: parsedInput.email,
           password: parsedInput.password,
-          callbackURL: ROUTES.ADMIN,
+          callbackURL: ROUTES.DASHBOARD,
         },
       });
     } catch (error) {
@@ -90,7 +90,7 @@ export const login = actionClient
         body: {
           email: parsedInput.email,
           password: parsedInput.password,
-          callbackURL: ROUTES.ADMIN,
+          callbackURL: ROUTES.DASHBOARD,
         },
       });
     } catch (error) {
@@ -108,7 +108,7 @@ export const signInWithGoogle = actionClient
         headers: await headers(),
         body: {
           provider: "google",
-          callbackURL: ROUTES.ADMIN,
+          callbackURL: ROUTES.DASHBOARD,
         },
       });
     } catch (error) {
@@ -126,7 +126,7 @@ export const signInWithGithub = actionClient
         headers: await headers(),
         body: {
           provider: "github",
-          callbackURL: ROUTES.ADMIN,
+          callbackURL: ROUTES.DASHBOARD,
         },
       });
     } catch (error) {
@@ -199,8 +199,8 @@ export const linkAccount = authedActionClient
         headers: await headers(),
         body: {
           provider: parsedInput.provider,
-          callbackURL: `${ROUTES.ADMIN}?open=links`,
-          errorCallbackURL: `${ROUTES.ADMIN}?open=links`,
+          callbackURL: `${ROUTES.DASHBOARD}?open=links`,
+          errorCallbackURL: `${ROUTES.DASHBOARD}?open=links`,
         },
       });
     } catch (error) {
@@ -305,7 +305,7 @@ export const resendVerification = actionClient
 
         body: {
           email: parsedInput.email,
-          callbackURL: ROUTES.ADMIN,
+          callbackURL: ROUTES.DASHBOARD,
         },
       });
     } catch {

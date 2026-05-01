@@ -80,7 +80,7 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
 
               {isSettingPassword ? (
                 <Link
-                  href={`${ROUTES.ADMIN}?open=security`}
+                  href={`${ROUTES.DASHBOARD}?open=security`}
                   className={buttonVariants({ variant: "auth", size: "auth-md" })}
                 >
                   Back to security settings
@@ -170,7 +170,7 @@ export function ResetPasswordForm({ token, type }: ResetPasswordFormProps) {
                 </Button>
                 {isSettingPassword ? (
                   <Link
-                    href={`${ROUTES.ADMIN}?open=security`}
+                    href={`${ROUTES.DASHBOARD}?open=security`}
                     className={buttonVariants({ variant: "auth-outline", size: "auth-md" })}
                   >
                     Cancel

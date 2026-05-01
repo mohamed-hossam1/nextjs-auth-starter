@@ -69,7 +69,7 @@ async function ResetPasswordContent({ searchParams }: ResetPasswordPageProps) {
               <div className="flex flex-col gap-3">
                 {isSettingPassword ? (
                   <Link
-                    href={`${ROUTES.ADMIN}?open=security`}
+                    href={`${ROUTES.DASHBOARD}?open=security`}
                     className={buttonVariants({ variant: "auth", size: "auth-md" })}
                   >
                     Back to security settings
