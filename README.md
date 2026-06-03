@@ -1,39 +1,76 @@
-This is a [Next.js](https://nextjs.org) project using [Bun](https://bun.sh) as the package manager and runtime.
+# Next.js + Bun Template
 
-## Getting Started
+Use this repository as a starting point for new projects. It ships with Next.js App Router, Bun tooling, Drizzle ORM, Better Auth, Tailwind CSS, and a basic auth flow you can extend.
 
-Install dependencies:
+## Use This Template
+
+### Option A: GitHub Template (recommended)
+
+1. Click **Use this template** on the GitHub repo.
+2. Create your new repository.
+3. Clone the new repo to your machine.
+
+### Option B: Clone and reset git history
+
+```bash
+git clone <TEMPLATE_REPO_URL> <YOUR_NEW_REPO>
+cd <YOUR_NEW_REPO>
+rm -rf .git
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+### Rename the project
+
+- Update the project name in [package.json](package.json).
+- Adjust metadata and docs to match your product.
+
+## Local Setup
+
+1. Install Bun: https://bun.sh
+2. Install dependencies:
 
 ```bash
 bun install
 ```
 
-Run the development server:
+3. Create a local env file using the example:
 
 ```bash
-bun run dev --turbo
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Update values in [.env.example](.env.example) for your environment.
+5. Apply the database schema:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+bun run db:push
+```
+
+6. Start the dev server:
+
+```bash
+bun run dev
+```
+
+Open http://localhost:3000 in your browser.
 
 ## Scripts
 
 ```bash
-bun run dev --turbo      # Start development server
-bun run build    # Create production build
-bun run start    # Start production server
-bun run lint     # Run ESLint
+bun run dev        # Start development server
+bun run build      # Create production build
+bun run start      # Start production server
+bun run lint       # Run ESLint
+bun run db:push    # Push schema to the database
+bun run db:migrate # Run migrations
 ```
 
-## Learn More
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Bun Documentation](https://bun.sh/docs) - learn about Bun runtime and tooling.
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- App routes and layouts: [app](app)
+- Server actions: [actions](actions)
+- UI components: [components](components)
+- Database schema and migrations: [db](db)
+- Utilities and integrations: [lib](lib)
